@@ -1,172 +1,175 @@
-# Gameplay Features
+# 游戏玩法特色
 
-Put feature collections inside the object passed to `define` in layer setup. Most collections are still objects keyed by ID, so you can keep old IDs while porting.
+把特征集合放进传递的对象里，在层设置中“定义”。大多数集合仍然是用ID键入的对象，所以移植时可以保留旧ID。
 
-Use string IDs in context calls and references. A key such as `"11"` no longer automatically places an item in row 1, column 1. Layout is handled separately.
+在上下文调用和引用中使用字符串ID。像“11”这样的键不再自动将项目放置在第1行第1列。布局是单独处理的。
 
-## Upgrades
+## 升级
 
-`title`, `description`, `cost`, `unlocked`, `effect`, and `onPurchase` still exist, but their callbacks receive context. `marked` becomes `mark` on features which support it.
+“标题”、“描述”、“费用”、“解锁”、“效果”和“onPurchase”依然存在，但它们的回调会获得上下文。支持该功能的“标记”会变成“标记”。
 
-Replace `currencyInternalName`, `currencyLayer`, and `currencyLocation` with one `currency` resource handle. Use the exported `points`, a layer's `.points`, or a handle from [defineResource](01/03).
+将“currencyInternalName”、“currencyLayer”和“currencyLocation”替换为一个“currency”资源句柄。使用导出的“points”、层的“.points”或[defineResource]（01/03）中的句柄。
 
-A normal purchase deducts the cost and records ownership. A custom `pay(context, cost)` replaces payment, and `onPurchase(context)` runs after the purchase. Don't repeat the standard payment in `onPurchase`.
+正常购买会扣除成本并记录所有权。自定义的“pay（context， cost）”替代付款，“onPurchase（context）”在购买后运行。不要在“onPurchase”中重复标准付款。
 
-`canAfford` adds a condition. Returning true doesn't bypass the currency check.
+“canAfford”会加一个条件。返回真实并不能绕过货币检查。
 
-## Buyables
+## 可购买
 
-3.x has a default buy-one action: pay the current cost, increase the amount by one, and call `onPurchase`. An ordinary 2.x buyable can often lose its custom `buy` entirely.
+3.x 里默认的购买操作是：支付当前价格，数量增加一，并调用 `onPurchase`。而普通的 2.x 可购买项通常会完全失去自定义的 `buy` 方法。
 
-For example, this setup field defines a buyable whose price doubles each time:
+例如，这个 setup 字段定义了一个每次价格翻倍的可购买项：
 
 ```js
 buyables: {
-    "11": {
-        title: "Generator",
-        cost: context => new Decimal(2).pow(context.getBuyableAmount("11")),
-        display: context => `You own ${format(context.getBuyableAmount("11"))} generators`,
-        showAmount: false, // Hides the built-in amount text because this example already includes it in `display`.
-        effect: context => context.getBuyableAmount("11").add(1)
-    }
+  "11": {
+    title: "生成器",
+    cost: context => new Decimal(2).pow(context.getBuyableAmount("11")),
+    display: context => `你拥有 ${format(context.getBuyableAmount("11"))} 个生成器`,
+    effect: context => context.getBuyableAmount("11").add(1)
+  }
 }
 ```
 
-Import `Decimal` and `format` from `"tmt"`. The cost defaults to this layer's currency. Apply the generator effect in your production formula wherever the old effect was used.
+从 `"tmt"` 导入 `Decimal` 和 `format`。价格默认为本层货币。在旧效果被用到的地方，将发电机效果应用到你的生产公式中。
 
-The old `cost(x)` and `effect(x)` arguments become context. Read the current amount through `context.getBuyableAmount`, or move a calculation for a hypothetical amount into a helper such as `costAt(amount)`.
+旧的 `cost(x)` 和 `effect(x)` 参数现在变成了 context。通过 `context.getBuyableAmount` 获取当前数量，或者把假设数量的计算放到辅助函数如 `costAt(amount)`。
 
-:::warning Custom buy Controls Payment
-If you keep `buy(context, cost)`, it replaces both the default payment and amount increment. Either omit it and use the default action, or implement both operations yourself. Use `onPurchase` for extra work after a normal purchase.
+:::warning 自定义购买控制支付
+如果你保留了 `buy(context, cost)`，它会替代默认的支付和数量增加。要么省略它并使用默认操作，要么自己实现两个操作。正常购买后额外操作可以用 `onPurchase`。
 :::
 
-Buy Max, selling, and respec still need authored behavior. A custom Buy Max doesn't automatically call `onPurchase` for every level.
+“买到最大”、“出售”和重置仍然需要你自己实现。自定义 Buy Max 并不会自动为每个等级调用 `onPurchase`。
 
-Move respec configuration out of the buyables collection:
+将重置配置移出 buyables 集合：
 
-| 2.x buyables-level field | 3.x setup field |
+| 2.x buyables-level 字段 | 3.x setup 字段 |
 | --- | --- |
 | `respec` | `buyableRespec.onRespec(context)` |
 | `respecText` | `buyableRespec.label` |
 | `respecMessage` | `buyableRespec.confirmation` |
 | `showRespec` | `buyableRespec.unlocked` |
 
-The respec hook controls refunds, amount changes, and resets. Put any saved respec accounting in your custom layer state, the engine doesn't maintain the old `spentOnBuyables` field for you.
+重置钩子控制退款、数量变化和重置。任何保存的重置数据都放在你自定义的层状态里，引擎不会再帮你维护旧的 `spentOnBuyables` 字段。
 
-## Clickables
+## 可点击
 
-Initialize an item's value with `initialValue`. Read it through `context.value`, and replace it with `context.setValue`:
+用 `initialValue` 初始化一个项目的值。通过 `context.value` 读取它，并使用 `context.setValue` 来替换它：
 
 ```js
 clickables: {
-    "11": {
-        initialValue: false,
-        display: context => context.value ? "Automation: On" : "Automation: Off",
-        onClick(context) {
-            context.setValue(!context.value);
-        }
+  "11": {
+  initialValue: false,
+    display: context => context.value ? "自动化：开启" : "自动化：关闭",
+    onClick(context) {
+      context.setValue(!context.value);
     }
+  }
 }
 ```
 
-Clickable values now support any savable value, including nested data. 
+可点击值现在支持任何可保存的值，包括嵌套数据。
 
-Do note that even in a write hook, `context.value` is protected, you must use the setter.
+请注意，即使在写入钩子中，`context.value` 也是受保护的，你必须使用 setter。
 
-`onHold(context, interval)` receives delta seconds. Use that interval for a per-second action instead of relying on the old fixed call frequency.
+`onHold(context, interval)` 会接收增量秒数。用这个间隔来执行每秒操作，而不是依赖旧的固定调用频率。
 
-There is no clickables-level master-button field. Define an ordinary clickable for that action and place it where you want it in the layout.
+没有可点击元素级别的主按钮字段。为该操作定义一个普通的可点击元素，并将它放在布局中你想要的位置。
 
-## Challenges
+
+## 挑战
 
 | 2.x | 3.x |
 | --- | --- |
 | `name` | `title` |
 | `challengeDescription` | `description` |
 | `rewardEffect` | `effect` |
-| Goal currency locator fields | `goalResource` |
+| 目标货币定位字段 | `goalResource` |
 | `countsAs: [11, 12]` | `countsAs: ["11", "12"]` |
-| Numeric result from `canComplete` for bulk completions | Boolean `canComplete` plus `completionGain` |
+| 批量完成时 `canComplete` 的数值结果 | 布尔值 `canComplete` 加上 `completionGain` |
 | `onComplete()` | `onComplete(context, gained, total)` |
 
-:::note Challenge Goals Use the Layer Currency by Default
-Old goal-based challenges commonly used points. In 3.x, specify `goalResource: points` when that's what the goal should check.
+:::note 挑战目标默认使用层货币
+旧的基于目标的挑战通常使用点数。在 3.x 中，当目标需要检测点数时，请指定 `goalResource: points`。
 :::
 
-For example, after importing `points`:
+例如，导入 `points` 后：
 
 ```js
 challenges: {
-    "11": {
-        title: "Dilation",
-        description: "Main point gain is rooted",
-        goal: 100,
-        goalResource: points,
-        goalDescription: "Reach 100 Points",
-        rewardDescription: "Double point gain!",
-        effect: () => 2
-    }
+"11": {
+title: "扩张",
+description: "主要点数收益是根源化的",
+goal: 100,
+goalResource: points,
+goalDescription: "达到 100 点",
+rewardDescription: "点数收益翻倍！",
+effect: () => 2
+}
 }
 ```
 
-In the mod's `pointGain`, use `context.inChallenge("11", prestige)` for the penalty and `context.getChallengeEffect("11", prestige) ?? 1` for the reward multiplier.
+在模组的 `pointGain` 中，使用 `context.inChallenge("11", prestige)` 计算惩罚，使用 `context.getChallengeEffect("11", prestige) ?? 1` 计算奖励倍数。
 
-## Milestones and Achievements
+进入和退出挑战会重置其源层，同时保留完成历史。检查任何旧的 `doReset` 特殊情况，并将需要保留的部分转移到 retention。`countsAs` 直接匹配列出的挑战，不会递归触发。
 
-Keep milestone `requirementDescription`, `effectDescription`, and `done`, and add context to callbacks. Achievement `name` becomes `title`. Use `description` for an achievement explanation.
+## 里程碑和成就
 
-Milestone toggles are now controlled through getters and setters. For example, in a layer whose `startState` contains `auto: false`, a milestone can contain:
+保持里程碑的 `requirementDescription`、`effectDescription` 和 `done`，并为回调添加上下文。成就的 `name` 改为 `title`。使用 `description` 来解释成就。
+
+里程碑切换现在通过 getter 和 setter 来控制。例如，在 `startState` 包含 `auto: false` 的层中，一个里程碑可以如下设置：
 
 ```js
 toggles: [{
-    label: "Auto Prestige",
-    value: {
-        get: context => context.layerState.auto,
-        set(context, value) { context.layerState.auto = value; }
-    }
+label: "自动声望",
+value: {
+get: context => context.layerState.auto,
+set(context, value) { context.layerState.auto = value; }
+}
 }]
 ```
 
-Keep the milestone check in your automation if it controls permission to automate. A saved toggle doesn't itself prove the milestone is currently active.
+如果里程碑控制自动化权限，请在自动化中保留里程碑检查。保存的切换本身并不能证明里程碑当前是激活状态。
 
-The old per-layer `milestonePopups` and `achievementPopups` fields aren't supported. `defineMod.ui.notifications` configures the shared popup system.
+旧的每层 `milestonePopups` 和 `achievementPopups` 字段不再支持。`defineMod.ui.notifications` 配置共享弹出系统。
 
-## Grids
+## 网格
 
-The old grid ID `101` becomes `"1:1"`, `102` becomes `"1:2"`, and `201` becomes `"2:1"`. Convert saved keys too.
+旧的网格 ID `101` 会变为 `"1:1"`，`102` 变为 `"1:2"`，`201` 变为 `"2:1"`。保存的键也要一起转换。
 
 | 2.x | 3.x |
 | --- | --- |
 | `cols` | `columns` |
 | `getStartData(id)` | `startData(context)` |
 | `getDisplay(data, id)` | `display(context)` |
-| `getTitle`, `getTooltip`, `getStyle`, `getEffect` | `title`, `tooltip`, `style`, `effect` |
-| `getUnlocked`, `getCanClick` | `unlocked`, `canClick` |
+| `getTitle`、`getTooltip`、`getStyle`、`getEffect` | `title`、`tooltip`、`style`、`effect` |
+| `getUnlocked`、`getCanClick` | `unlocked`、`canClick` |
 | `onClick(data, id)` | `onClick(context)` |
-| `maxRows`, `maxCols` | Unsupported|
+| `maxRows`、`maxCols` | 不支持 |
 
-Cell context supplies `row`, `column`, `key`, and `data`. For example:
+单元格上下文会提供 `row`、`column`、`key` 和 `data`。例如：
 
 ```js
 grid: {
-    rows: 2,
-    columns: 2,
-    startData: () => 0,
-    display: context => String(context.data),
-    onClick(context) {
-        context.setGridData(context.key, context.data + 1);
-    }
+  rows: 2,
+  columns: 2,
+  startData: () => 0,
+  display: context => String(context.data),
+  onClick(context) {
+    context.setGridData(context.key, context.data + 1);
+  }
 }
 ```
 
-Use `context.getGridData(1, 1)` for coordinates, or `context.getGridData("1:1")` for a key. From a mod context, also pass the layer handle.
 
-## Other Feature Changes
+## 其他改变
 
-- Infoboxes keep `title` and `body`. Update their callbacks to use context.
-- Bars use string directions such as `"right"` and `"up"`. Replace old direction globals.
-- Feature branches use IDs or `{ target, color, width }` objects. Replace positional branch tuples and numeric theme colors.
+使用 `context.getGridData(1, 1)` 来获取坐标，或者用 `context.getGridData("1:1")` 来获取键。在 mod 上下文中，也可以传入层句柄。
 
-Check the relevant [defineLayer fields](01/01) rather than copying every old property. Some 2.x feature-specific display and tooltip fields have no corresponding field on the new feature.
+- 信息框保留 `title` 和 `body`。更新它们的回调以使用上下文。
+- 条形使用字符串方向，如 `"right"` 和 `"up"`。替换旧的方向全局变量。
+- 特性分支使用 ID 或 `{ target, color, width }` 对象。替换位置分支元组和数字主题颜色。
 
-Next, arrange the converted features in [Pages and the Tree](04/00/04).
+查看相关的 [defineLayer 字段](01/01)，而不是复制每个旧属性。一些 2.x 特性专用的显示和工具提示字段在新特性中没有对应字段。
+
+接下来，将转换后的特性安排在 [页面和树](04/00/04) 中。

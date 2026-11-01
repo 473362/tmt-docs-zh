@@ -1,55 +1,56 @@
-# Formatting
+# 格式化
 
-TMT exports five helpers for displaying quantities and elapsed time.
+TMT 提供了五个用来显示数量和经过时间的辅助工具。
 
-Shared types used on this page:
+本页使用的共享类型：
 
-- `DecimalSource` {type: Decimal | ReadonlyDecimal | number | string}\
-Input accepted by Decimal-valued fields and operations. See [Decimal](01/04) for more information.
+- `DecimalSource` {type: Decimal | ReadonlyDecimal | number | string} 
+用于 Decimal 值字段和运算的输入。更多信息请参见 [Decimal](01/04)。
 
-## Shared Arguments
+## 共享参数
 
-- `value` {type: DecimalSource} {required}\
-Quantity to be formatted.
-- `precision` {type: number} {optional}\
-Fractional precision to be shown, if possible. Must be an integer from `0` through `99`. Defaults depend on the helper. Some notation choices use their own precision, described below.
+- `value` {type: DecimalSource} {必填} 
+要格式化的数量。
+- `precision` {type: number} {可选} 
+如可能，显示的分数精度。必须是 0 到 99 之间的整数。默认值取决于具体的辅助工具。有些记法会使用自己的精度，详见下文。
 
-An invalid numeric string follows Decimal parsing and can display `"NaN"`. All helpers below return display text.
+无效的数字字符串会按照 Decimal 解析，可以显示 `"NaN"`。下面所有辅助工具都会返回显示文本。
+
 
 ## format(value, precision) {type: string}
 
-The general-purpose formatter. `precision` defaults to `2`. Negative values use a leading minus, and zero displays with the requested precision.
+通用格式化器。`precision` 默认为 `2`。负数会带上前导负号，零会按照指定的精度显示。
 
-The notation varies from value to value. The following table lays out the notations used:
+不同的数值会使用不同的表示法。下表列出了使用的表示法：
 
-:::note Intervals
-If you aren't familiar with interval notation (used in the table below): (x, y) means values from x to y, excluding x and y, while \[x, y] means values from x to y, including x and y.
+:::note 区间
+如果你不熟悉区间表示法（如下表所示）：(x, y) 表示从 x 到 y 之间的值，不包括 x 和 y，而 \[x, y] 表示从 x 到 y，包括 x 和 y。
 :::
 
-| Starting value | Display |
+| 起始值 | 显示 |
 | --- | --- |
-| (0, 0.0001) | Formatted reciprocal followed by `⁻¹` |
-| [0.0001, 1000)| Displayed as itself|
-| [1000, 1,000,000)| Displayed with commas|
-| [1e6, 1e10000)| Exponential notation|
-| [1e10000, 1e1000000)| Exponential notation, no precision |
-| [`1e1000000`, eeee1000)| Displayed as simply its exponent|
-| [`eeee1000`, ∞)| Displayed with F notation, based on super-logarithm |
+| (0, 0.0001) | 倒数后格式化，后跟 `⁻¹` |
+| [0.0001, 1000) | 原样显示 |
+| [1000, 1,000,000) | 用逗号分隔显示 |
+| [1e6, 1e10000) | 指数表示法 |
+| [1e10000, 1e1000000) | 指数表示法，无精度 |
+| [`1e1000000`, eeee1000) | 仅显示指数 |
+| [`eeee1000`, ∞) | 使用 F 表示法，基于超级对数 |
 
-F notation uses three decimal places before `F` and the whole super-logarithm after it. Once the super-logarithm reaches `1e6`, the display becomes `F` followed by the formatted whole super-logarithm.
+F 表示法在 `F` 前保留三位小数，`F` 后显示整个超级对数。一旦超级对数达到 `1e6`，显示格式变为 `F` 后跟格式化后的整个超级对数。
 
-Use `format(value, 0)` for whole-number display. This still allows exponential and reciprocal notation.
+使用 `format(value, 0)` 可以显示整数。这仍然允许使用指数和倒数表示法。
 
-Rounding doesn't restart notation selection. This is why a value just below `1000` can display `1000.00` without a comma.
+四舍五入不会重新选择表示法。这就是为什么一个略小于 `1000` 的数值可能显示为 `1000.00` 而没有逗号。
 
 ## exponentialFormat(value, precision, showMantissa) {type: string}
 
-Displays a mantissa and exponent. `precision` defaults to `2`.
+显示尾数和指数。`precision` 默认值为 `2`。
 
-- `showMantissa` {type: boolean} {optional}\
-Controls whether the part before `e` is displayed. Defaults to `true`.
+- `showMantissa` {type: boolean} {可选}  
+控制是否显示 `e` 前面的部分。默认值为 `true`。
 
-| Call | Result |
+| 调用 | 结果 |
 | --- | --- |
 | `exponentialFormat(0)` | `"0.00e0"` |
 | `exponentialFormat(0, 2, false)` | `"e0"` |
@@ -60,11 +61,11 @@ Controls whether the part before `e` is displayed. Defaults to `true`.
 
 ## commaFormat(value, precision) {type: string}
 
-Displays a value with comma separators. `precision` defaults to `0`. Magnitudes below `0.001` display zero with the requested precision.
+显示带逗号分隔的数值。`precision` 默认是 `0`。小于 `0.001` 的数值会按照指定精度显示为 0。
 
-If Decimal already produces another notation, the helper keeps it instead of adding commas inside that notation.
+如果 Decimal 在转成字符串后用了其他表示法，这个辅助函数会保持原样，而不会在这个表示法内部加逗号。
 
-| Call | Result |
+| 调用 | 结果 |
 | --- | --- |
 | `commaFormat(12345.678)` | `"12,346"` |
 | `commaFormat(12345.678, 2)` | `"12,345.68"` |
@@ -74,27 +75,25 @@ If Decimal already produces another notation, the helper keeps it instead of add
 
 ## simpleFormat(value, precision) {type: string}
 
-Displays a value as itself, with the requested precision. `precision` defaults to `2`. Magnitudes below `0.0001` display zero.
+以自身的形式显示一个值，并使用请求的精度。`precision` 默认为 `2`。小于 `0.0001` 的数值显示为零。
 
-| Call | Result |
+| 调用 | 结果 |
 | --- | --- |
 | `simpleFormat(1234.567)` | `"1234.57"` |
 | `simpleFormat(0.01234)` | `"0.0123"` |
 | `simpleFormat(0.01234, 0)` | `"0"` |
 | `simpleFormat(0.00001)` | `"0.00"` |
 
-This doesn't force arbitrarily large quantities into simple notation.
-
 ## timeFormat(seconds) {type: string}
 
-Displays elapsed time using seconds, minutes, hours, days, and years.
+使用秒、分钟、小时、天和年显示经过的时间。
 
-- `seconds` {type: DecimalSource} {required}\
-Elapsed time in seconds. Negative values display zero. Rounds to hundredths before separating units.
+- `seconds` {type: DecimalSource} {必填}  
+经过的时间（秒）。负值显示为零。单位分隔前四舍五入到百分位。
 
-A year uses `365` days. Rounding can carry into the next minute, hour, day, or year. There is no precision argument.
+一年按 `365` 天计算。四舍五入可能会影响到下一个分钟、小时、天或年。没有精度参数。
 
-| Call | Result |
+| 调用 | 结果 |
 | --- | --- |
 | `timeFormat(-1)` | `"0.00s"` |
 | `timeFormat(59.999)` | `"1m 0.00s"` |

@@ -1,378 +1,205 @@
-# Context
+# 上下文
 
-`context` is how callbacks read saved state and perform gameplay actions.
+`context` 是回调读取保存的状态并执行游戏操作的方式。
 
-Shared types used on this page:
+本页使用的共享类型：
 
-- `DecimalSource` {type: Decimal | ReadonlyDecimal | number | string}\
-Input accepted by Decimal-valued fields and operations. See [Decimal](01/04) for more information.
-- `Decimal` {type: object}\
-A quantity with arithmetic and comparison methods. See [Decimal](01/04) for more information.
-- `ReadonlyDecimal` {type: protected Decimal}\
-Supports Decimal calculations without allowing changes to its value. See [Decimal](01/04) for more information.
-- `LayerHandle` {type: layer identity}\
-Returned by [defineLayer](01/01). Exposes only the layer's `id` and `points` resource, with context used to access its state.
-- `DecimalResource` {type: resource identity}\
-Identifies a currency through the exported `points`, a layer's `points`, or [defineResource](01/03). Exposes its `name` and `owner`.
-- `PlayerState` {type: object}\
-Main saved state. See [Main Player Context](01/06?s=main-player-context) for its fields.
-- `LayerState` {type: object}\
-Actual layer state, combining engine fields with custom fields from `startState`. See [defineLayer’s startState](01/01?s=2) for the fields and their defaults.
+- `DecimalSource` {type:Decimal | ReadonlyDecimal | number | string}  
+可用于 Decimal 类型字段和运算的输入。更多信息请参见 [Decimal](01/04)。
+- `Decimal` {type:对象}  
+带有算术和比较方法的数值。更多信息请参见 [Decimal](01/04)。
+- `ReadonlyDecimal` {type:受保护的 Decimal}  
+支持 Decimal 计算，但不允许修改其值。更多信息请参见 [Decimal](01/04)。
+- `LayerHandle` {type:层标识}  
+由 [defineLayer](01/01) 返回。仅暴露层的 `id` 和 `points` 资源，使用上下文访问其状态。
+- `DecimalResource` {type:资源标识}  
+通过导出的 `points`、层的 `points` 或 [defineResource](01/03) 来识别货币。暴露其 `name` 和 `owner`。
+- `PlayerState` {type:对象}  
+主要保存的状态。其字段请参见 [Main Player Context](01/06?s=main-player-context)。
+- `LayerState` {type:对象}  
+实际层状态，将引擎字段与 `startState` 的自定义字段结合。字段及默认值请参见 [defineLayer 的 startState](01/01?s=2)。
 
-## Contexts
+## 上下文
 
-### Main Player Context
+### 主玩家上下文
 
-The following fields are available directly through `context.player`:
+以下字段可以直接通过 `context.player` 访问：
 
-- `points` {type: Decimal} {required}\
-Main currency balance. Starts at `info.initialPoints`.
-- `timePlayed` {type: number} {required}\
-Play time in seconds, including offline time.
-- `won` {type: boolean} {required}\
-Whether the endgame condition has been reached.
-- `keepGoing` {type: boolean} {required}\
-Whether the player has made the choice to continue after winning. A won game is paused until this is `true`.
-- `activeLayer` {type: string} {required}\
-ID of the persistent selected layer. Deep navigation has its own temporary stack and doesn't set this field.
+- `points` {type: Decimal} {required}  
+主货币余额。初始值为 `info.initialPoints`。
+- `timePlayed` {type: number} {required}  
+游戏时间（秒），包括离线时间。
+- `won` {type: boolean} {required}  
+是否达到了游戏结束条件。
+- `keepGoing` {type: boolean} {required}  
+玩家是否选择在获胜后继续游戏。获胜的游戏会暂停，直到这个值为 `true`。
+- `activeLayer` {type: string} {required}  
+持久选择的图层 ID。深层导航有自己的临时栈，不会设置此字段。
 
-### Mod Contexts
+### 模组上下文
 
-`ModReadContext` is used by mod calculations, resource getters, and node display callbacks. `ModWriteContext` is used by mod update hooks, resource setters, and node click hooks.
+`ModReadContext` 用于模组计算、资源获取器和节点显示回调。`ModWriteContext` 用于模组更新钩子、资源设置器和节点点击钩子。
 
-- `player` {type: PlayerState} {required}\
-Read contexts protect this state from mutation, write contexts allow changes to its existing fields.
+- `player` {type: PlayerState} {required}  
+读取上下文保护此状态不被修改，写入上下文允许更改其现有字段。
 
-### Layer Contexts
+### 图层上下文
 
-`LayerReadContext` and `LayerWriteContext` add the current layer and default local operations to it.
+`LayerReadContext` 和 `LayerWriteContext` 会将当前图层和默认的本地操作添加到其中。
 
-- `layer` {type: LayerHandle} {required}\
-Current layer handle.
-- `layerState` {type: LayerState} {required}\
-Current layer state. Has the same access rules as `stateOf(context.layer)`.
+- `layer` {type: LayerHandle} {必填}  
+当前图层的句柄。
+- `layerState` {type: LayerState} {必填}  
+当前图层状态。访问权限与 `stateOf(context.layer)` 相同。
 
-Layer callbacks, bars, page layout calculations, and hotkeys use these contexts.
+图层回调、进度条、页面布局计算和快捷键都会使用这些上下文。
 
-### Item Contexts
+### 物品上下文
 
-`ItemReadContext` and `ItemWriteContext` add the current item to the layer context. Upgrades, buyables, challenges, milestones, achievements, infoboxes, and forms use item contexts for their callbacks.
+`ItemReadContext` 和 `ItemWriteContext` 会将当前物品添加到图层上下文中。升级、可购买物品、挑战、里程碑、成就、信息框和表单在回调中使用物品上下文。
 
-- `id` {type: string} {required}\
-Current item ID. It belongs to the collection whose callback is running.
+- `id` {type: string} {必填}  
+当前物品的 ID。它属于正在运行回调的集合。
 
-### Clickable Contexts
+### 可点击上下文
 
-`ClickableReadContext` and `ClickableWriteContext` also provide:
+`ClickableReadContext` 和 `ClickableWriteContext` 还提供：
 
-- `value` {type: inferred clickable value} {required}\
-Current clickable value, protected from direct mutation even in write hooks. Initialize it with `initialValue`.
+- `value` {type: 推断的可点击值} {必填}  
+当前可点击元素的值，即使在写入钩子中也不能直接修改。用 `initialValue` 初始化它。
 
-`setValue(value)` replaces the whole value from a clickable write hook. See its entry below.
+`setValue(value)` 可从可点击写入钩子中替换整个值。详细说明请参见下文。
 
-### Grid Contexts
+### 网格上下文
 
-`GridCellReadContext` and `GridCellWriteContext` provide:
+`GridCellReadContext` 和 `GridCellWriteContext` 提供：
 
-- `row` {type: number} {required}\
-Cell row, starting at `1`.
-- `column` {type: number} {required}\
-Cell column, starting at `1`.
-- `key` {type: string} {required}\
-Cell address such as `"2:3"`.
-- `data` {type: inferred grid payload} {required}\
-Current cell value. Nested data can be changed in grid write hooks. Use `setGridData` to replace the whole value, since the context property itself cannot be mutated.
+- `row` {type: number} {必填}  
+  单元格行，从 `1` 开始。
+- `column` {type: number} {必填}  
+  单元格列，从 `1` 开始。
+- `key` {type: string} {必填}  
+  单元格地址，例如 `"2:3"`。
+- `data` {type: 推断的网格数据} {必填}  
+  当前单元格的值。在网格写入钩子中可以修改嵌套数据。要替换整个值，使用 `setGridData`，因为上下文属性本身不能被直接修改。
 
-Grid dimensions use layer contexts. Cell calculations and interactions use grid contexts.
+网格尺寸使用层上下文。单元格计算和交互使用网格上下文。
 
-### Reset Contexts
+### 重置上下文
 
-`retention` uses `ResetReadContext`, `onReset` uses `ResetContext`. Their current layer is the reset target.
+`retention` 使用 `ResetReadContext`，`onReset` 使用 `ResetContext`。它们当前的层是重置目标。
 
-- `kind` {type: "self" | "incoming"} {required}\
-The type of reset occurring.
-- `cause` {type: "prestige" | "challenge-enter" | "challenge-exit" | "forced"} {required}\
-Operation which started the reset.
-- `source` {type: LayerHandle} {required}\
-Layer which initiated the reset.
-- `target` {type: LayerHandle} {required}\
-Layer whose state is being handled.
-- `gain` {type: ReadonlyDecimal} {required}\
-Awarded prestige currency. Forced and challenge resets use `0`.
-- `previousTargetState` {type: LayerState} {required when: the target state was reset}\
-Read-only view of the old target state.
+- `kind` {type: "self" | "incoming"} {必填}  
+  正在发生的重置type。
+- `cause` {type: "prestige" | "challenge-enter" | "challenge-exit" | "forced"} {必填}  
+  启动重置的操作。
+- `source` {type: LayerHandle} {必填}  
+  发起重置的层。
+- `target` {type: LayerHandle} {必填}  
+  状态正在被处理的层。
+- `gain` {type: ReadonlyDecimal} {必填}  
+  授予的声望货币。强制和挑战重置使用 `0`。
+- `previousTargetState` {type: LayerState} {当目标状态被重置时必填}  
+  旧目标状态的只读视图。
 
-See [defineLayer](01/01?s=4) for more information on resets and retention.
+关于重置和保留的更多信息，请参见 [defineLayer](01/01?s=4)。
 
-## Method Arguments
-
-The following arguments are shared by all method entries below:
-
-- `layer` {type: LayerHandle} {required when: called from a mod context}\
-Target layer. Defaults to the current layer in layer, item, clickable, grid, and reset contexts. `stateOf` and `grantLayerPoints` always expect a handle.
-- `id` {type: string} {required}\
-Item ID in the selected layer.
-- `resource` {type: DecimalResource} {required}\
-Currency to read or change.
-- `key` {type: string} {required when: using a grid key overload}\
-A cell's `"row:column"` address.
-- `row`, `column` {type: number} {required when: using a grid coordinate overload}\
-Integer coordinates from `1` through `1000`.
-- `interval` {type: number} {required when: calling a hold method}\
-Elapsed seconds for one hold invocation. Direct calls can use `0`.
-
-A method returning `false` means a non-erroring action wasn't performed, such as trying to buy an unaffordable upgrade.
-
-## Reading State and Resources
-
-### stateOf(layer) {type: LayerState}
-
-Returns the current state of the layer handle. Read contexts return protected views, write contexts return writable views. The handle argument must be supplied.
-
-### getResource(resource) {type: Decimal}
-
-Runs the resource getter and returns a copy. Changing that result doesn't update the resource.
-
-### getResetGain(layer) {type: Decimal}
-
-Calculates the current prestige gain without performing a reset. A reset can report a gain of `1` before it is affordable but may not be actually obtainable, use `canReset` to check availability. No-reset layers report zero. Locking or deactivation doesn't suppress this calculation.
-
-### getNextRequirement(layer) {type: Decimal}
-
-Calculates the next reset requirement. No-reset layers report zero. Custom resets use their callback. Locking or deactivation doesn't suppress this calculation.
-
-### canReset(layer) {type: boolean}
-
-Checks the reset definition's current conditions. Locking alone doesn't make this return `false`, deactivation does.
-
-## Reading Features
-
-### hasUpgrade(id, layer) {type: boolean}
-
-Checks purchased ownership while the layer is active. Deactivation makes it return `false` without effecting the actual purchase state.
-
-### getBuyableAmount(id, layer) {type: Decimal}
-
-Returns a copy of the saved amount, including while the layer is deactivated.
-
-### getBuyableCost(id, layer) {type: Decimal}
-
-Returns a copy of the current cost, including while the layer is deactivated.
-
-### canBuyBuyable(id, layer) {type: boolean}
-
-Checks whether a buy-one purchase is currently eligible. For a buyable to be purchasable: its layer must be unlocked and not deactivated, the buyable must be unlocked, its amount must be below the purchase limit, its `canAfford` condition must be satisfied, and the currency used in its cost must be sufficient.
-
-### getClickableState(id, layer) {type: any}
-
-Reads the current clickable value.
-
-### hasChallenge(id, layer) {type: boolean}
-
-Checks whether the challenge has at least one completion and its layer is not deactivated. Doesn't indicate whether the challenge is currently running.
-
-### getChallengeCompletions(id, layer) {type: number}
-
-Returns the saved completion count, including while the layer is deactivated.
-
-### inChallenge(id, layer) {type: boolean}
-
-Checks whether the challenge is active, or the active challenge directly lists this ID in `countsAs`. Deactivated layers return `false`.
-
-### hasMilestone(id, layer) {type: boolean}
-
-Checks milestone completion while the layer is not deactivated.
-
-### hasAchievement(id, layer) {type: boolean}
-
-Checks achievement completion while the layer is not deactivated.
-
-### getGridData(key, layer) {type: any}
-
-Also accepts `getGridData(row, column, layer)`. Reads grid data.
-
-### getInput(id, layer) {type: any}
-
-Reads the form's saved value or calls its binding getter. Sliders return a value clamped to their current bounds without changing saved state.
-
-### Effect Getters {type: any}
-
-| Method | Evaluates |
-| --- | --- |
-| `getLayerEffect(layer)` | The layer's effect. |
-| `getUpgradeEffect(id, layer)` | An owned upgrade's effect. |
-| `getBuyableEffect(id, layer)` | A buyable's effect at its current amount, including zero. |
-| `getClickableEffect(id, layer)` | A clickable's effect at its current value. |
-| `getChallengeEffect(id, layer)` | A challenge's reward effect after at least one completion. |
-| `getMilestoneEffect(id, layer)` | An earned milestone's effect. |
-| `getAchievementEffect(id, layer)` | An earned achievement's effect. |
-| `getGridEffect(key, layer)` or `getGridEffect(row, column, layer)` | A grid cell's effect.|
-
-Missing effects and effects suppressed by deactivation return `undefined`. Feature visibility doesn't automatically gate an effect either.
-
-Dynamic getters expose `any` in the current SDK so ordinary JavaScript code can consume authored values without annotations.
-
-### Effect Previews {type: any}
-
-:::warning Unsafe Effect Access
-The `preview[item]Effect` methods are intended for **display use only**. They bypass ownership, completion, visibility, and layer deactivation checks. Always the matching `get[item]Effect` method for gameplay calculations.
-:::
-
-| Method | Evaluates |
-| --- | --- |
-| `previewLayerEffect(layer)` | The layer's effect. |
-| `previewUpgradeEffect(id, layer)` | A upgrade's effect, regardless of ownership.|
-| `previewBuyableEffect(id, layer)` | A buyable's effect at its current amount, including zero.|
-| `previewClickableEffect(id, layer)` | A clickable's effect at its current value. |
-| `previewChallengeEffect(id, layer)` | A challenge's reward effect, regardless of completions. |
-| `previewMilestoneEffect(id, layer)` | A milestone's effect, regardless of completion. |
-| `previewAchievementEffect(id, layer)` | A achievement's effect, regardless of completion. |
-| `previewGridEffect(key, layer)` or `previewGridEffect(row, column, layer)` | A grid cell's effect.|
-
-For example, a challenge's `rewardDisplay` can show its reward before the player earns a completion:
-
-```js
-effect: () => 2,
-rewardDisplay: context => `Reward: ${context.previewChallengeEffect(context.id)}`
-```
-
-## Changing Resources
-
-These operations use a writable context.
-
-- `value` {type: DecimalSource} {required}\
-Amount to write, add, spend, or grant. Must be finite.
-
-### setResource(resource, value) {type: void}
-
-Replaces the resource balance through its setter.
-
-### addResource(resource, value) {type: void}
-
-Adds a signed amount through the getter and setter.
-
-### spendResource(resource, value) {type: boolean}
-
-Returns `false` if the current balance is below the requested amount. Otherwise subtracts it and returns `true`. Negative spending can increase the balance.
-
-### grantLayerPoints(layer, value) {type: void}
-
-Adds a signed amount to points and total, then raises best if the resulting points exceed it.
-
-## Resets
-
-### reset(layer) {type: boolean}
-
-Attempts a prestige reset. Checks availability, grants currency, and runs the reset sequence. Returns `false` when unavailable.
-
-### forceReset(options) {type: boolean}
-
-The options argument can include:
-- `layer` {type: LayerHandle} {required when: called from a mod context}\
-Source layer. Defaults to the current layer in a layer-scoped context.
-- `resetSource` {type: boolean} {optional}\
-When `true`, resets the triggering layer.
-
-The options argument must be supplied, even when using `context.forceReset({})` locally.
-
-Runs forced reset effects without granting currency or checking prestige currency affordability. Rejects a deactivated source, but can act on a locked one.
-
-## Purchases
+## 可购买
 
 ### buyUpgrade(id, layer) {type: boolean}
 
-Buys an upgrade. Checks cost and affordability, pays, records ownership, and calls `onPurchase`.
+购买一个升级。检查花费和可负担性，支付费用，记录拥有情况，然后调用 `onPurchase`。
 
 ### buyBuyable(id, layer) {type: boolean}
 
-Buys one level of a buyable. Checks visibility, affordability, and purchase limit, then performs payment and increment before `onPurchase`.
+购买一个可购买项目的一个等级。检查可见性、可负担性和购买限制，然后在 `onPurchase` 之前执行支付和等级增加。
 
 ### buyMaxBuyable(id, layer) {type: boolean}
 
-Runs a buyable `buyMax` hook after normal purchase eligibility checks. Returns `false` without that hook. It doesn't repeatedly buy-one or automatically spend, increment, or invoke `onPurchase`.
+在普通购买资格检查之后运行可购买项目的 `buyMax` 钩子。如果没有该钩子则返回 `false`。它不会反复购买单个等级，也不会自动花费、增加或调用 `onPurchase`。
 
 ### sellOneBuyable(id, layer) {type: boolean}
 
-Runs a buyable `sellOne` hook after availability and `canSellOne` checks. Returns `false` without the hook.
+在可用性和 `canSellOne` 检查之后运行可购买项目的 `sellOne` 钩子。如果没有该钩子则返回 `false`。
 
 ### sellAllBuyable(id, layer) {type: boolean}
 
-Runs a buyable `sellAll` hook after availability and `canSellAll` checks.
+在可用性和 `canSellAll` 检查之后运行可购买项目的 `sellAll` 钩子。
 
 ### respecBuyables(layer) {type: boolean}
 
-Runs a `buyableRespec.onRespec` hook. Doesn't open the UI confirmation dialog.
+运行 `buyableRespec.onRespec` 钩子。不会打开 UI 确认对话框。
 
-## Clickables
+## 可点击
 
 ### setClickableState(id, value, layer) {type: boolean}
 
-Replaces the saved value. Can update locked, hidden, or deactivated features. Returns `true` after write.
+替换已保存的值。可以更新锁定、隐藏或停用的功能。写入后返回 `true`。
 
 ### setValue(value) {type: boolean}
 
-Available in clickable write contexts. Replaces that clickable's value using the same rules as `setClickableState`.
+可在可点击写入上下文中使用。使用与 `setClickableState` 相同的规则替换该可点击项的值。
 
 ### clickClickable(id, layer) {type: boolean}
 
-Checks interaction eligibility and runs `onClick`. Without a hook, toggles a boolean value.
+检查交互资格并运行 `onClick`。没有钩子时，切换布尔值。
 
 ### holdClickable(id, interval, layer) {type: boolean}
 
-Runs a clickable `onHold` hook. Returns `false` without that hook. Doesn't start a timer or repeat automatically.
+运行可点击项的 `onHold` 钩子。没有该钩子时返回 `false`。不会自动启动计时器或重复执行。
 
-## Grids
+## 网格
 
 ### setGridData(key, value, layer) {type: boolean}
 
-Also accepts `setGridData(row, column, value, layer)`. Replaces a grid cell value. Returns `true` after a valid write.
+也可以使用 `setGridData(row, column, value, layer)`。替换网格单元格的值。有效写入后返回 `true`。
 
 ### clickGrid(key, layer) {type: boolean}
 
-Also accepts `clickGrid(row, column, layer)`. Runs a grid cell `onClick` hook.
+也可以使用 `clickGrid(row, column, layer)`。触发网格单元格的 `onClick` 钩子。
 
 ### holdGrid(key, interval, layer) {type: boolean}
 
-Also accepts `holdGrid(row, column, interval, layer)`. Runs a grid cell hold hook. Doesn't start a hold timer.
+也可以使用 `holdGrid(row, column, interval, layer)`。触发网格单元格的长按钩子。不启动长按计时器。
 
-## Challenges
+## 挑战
 
 ### enterChallenge(id, layer) {type: boolean}
 
-Enters a challenge when no challenge is active and this one isn't maxed. Runs its challenge-enter reset, then calls `onEnter`.
+当当前没有挑战进行中且该挑战未达上限时进入挑战。运行其进入挑战的重置，然后调用 `onEnter`。
 
 ### completeChallenge(id, layer) {type: boolean}
 
-Attempts to reward completions to the active challenge ID. Caps the reward at the completion limit. If successful, calls `onComplete` and leaves the challenge active. A failed reward returns `false`.
+尝试给当前挑战 ID 的完成次数发放奖励。奖励最多不超过完成限制。成功时调用 `onComplete` 并保持挑战处于激活状态。奖励失败返回 `false`。
 
 ### exitChallenge(id, layer) {type: boolean}
 
-Checks the active challenge ID's exit conditions, attempts a completion, clears the active ID, calls `onExit`, then runs the challenge-exit reset. The stock Complete button uses this exit operation.
+检查当前挑战 ID 的退出条件，尝试一次完成，清除激活 ID，调用 `onExit`，然后运行挑战退出重置。默认的完成按钮使用此退出操作。
 
-## Milestones
+## 里程碑
 
 ### toggleMilestone(id, toggleIndex, layer) {type: boolean}
 
-- `toggleIndex` {type: number} {required}\
-The index of a toggle to toggle. An index outside the defined list returns `false`.
+- `toggleIndex` {type: number} {required}
+要切换的切换项索引。索引超出定义列表范围返回 `false`。
 
-Reverses a milestone toggle's state.
+反转里程碑切换项的状态。
 
-## Forms
+## 表单
 
 ### setInput(id, value, layer) {type: boolean}
 
-Checks layer and form availability, normalizes the submitted value, writes the value or calls the binding setter, then invokes `onChange`. Sliders clamp to their bounds but aren't rounded to `step`. An unavailable dropdown choice returns `false`.
+检查图层和表单的可用性，规范化提交的值，写入值或调用绑定的设置器，然后触发 `onChange`。滑块会限制在边界内，但不会四舍五入到 `step`。不可用的下拉选项会返回 `false`。
 
-## Popups and Modals
+## 弹出窗口和模态框
 
-The following write methods are described in [Popups and Modals](01/08):
+以下写入方法在 [弹出窗口和模态框](01/08) 中进行了说明：
 
-- `popup(request)` {type: void}\
-Queues a popup.
-- `alert(options, onClose)` {type: void}\
-Opens an informational modal.
-- `confirm(options, onResult)` {type: void}\
-Opens a confirmation modal.
-- `prompt(options, onResult)` {type: void}\
-Opens a modal which requires player input.
+- `popup(request)` {type: void}  \
+排队一个弹出窗口。
+- `alert(options, onClose)` {type: void}  
+打开一个信息模态框。
+- `confirm(options, onResult)` {type: void}  
+打开一个确认模态框。
+- `prompt(options, onResult)` {type: void}  
+打开一个需要玩家输入的模态框。

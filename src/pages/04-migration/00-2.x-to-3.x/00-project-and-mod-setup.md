@@ -1,12 +1,12 @@
-# Project and Mod Setup
+# 项目与模组设置
 
-Create a separate project from the current template. [Creating a Game](00/00) covers cloning its submodules and running it locally.
+创建一个独立于当前模板的项目。[创建游戏](00/00) 涵盖克隆其子模块并在本地运行。
 
-Keep the new template's `index.html`, launchers, and `tmt` folders. Bring across your game code and assets as you convert them.
+保留新模板的`index.html`、启动器和`tmt`文件夹。转换时带上你的游戏代码和资源。
 
-## Replace mod.js Globals
+## 替换mod.js全球
 
-3.x starts from `main.js`. It imports layer handles and calls `defineMod` once:
+3.x 从`main.js`开始。它导入层句柄并调用一次`defineMod`：
 
 ```js
 import { defineMod } from "tmt";
@@ -15,8 +15,8 @@ import { prestige } from "./src/prestige.js";
 defineMod({
     info: {
         id: "my-tree-v3",
-        name: "My Tree",
-        author: "Your Name",
+        name: "我的树",
+        author: "填你名字",
         version: "3.0.0",
         pointsName: "points",
         initialPoints: 10,
@@ -34,50 +34,52 @@ defineMod({
 });
 ```
 
-This example assumes `prestige.js` exports a layer with upgrade `"11"`. You can use the layer in [Layers and Resets](04/00/02) while working through the guide.
+这个例子假设`prestige.js`导出一个升级为“11”的层。你可以在[层与重置](04/00/02)中使用该层，同时操作指南。
 
-Import engine helpers from "tmt", and import your other files by path. You don't need to export the result of `defineMod`.
+从`tmt`导入引擎助手，然后按路径导入其他文件。你不需要导出“defineMod”的结果。
 
-## Configuration Names
+## 配置名称
 
 | 2.x | 3.x |
 | --- | --- |
-| `modInfo.id`, `name`, `author`, `pointsName` | Corresponding fields in `info` |
-| `VERSION.num` | `info.version` for display |
-| `modInfo.initialStartPoints` | `info.initialPoints` for fresh points |
+| `modInfo.id`、`name`、`author`、`pointsName` | `info` 中的对应字段 |
+| `VERSION.num` | 用于显示的 `info.version` |
+| `modInfo.initialStartPoints` | 新起点使用的 `info.initialPoints` |
 | `modInfo.offlineLimit` | `info.offlineLimitHours` |
-| `modInfo.modFiles` | Imports in `main.js` and your layer files |
-| `layoutInfo.startTab` | `info.startLayer`, using a layer handle |
-| `layoutInfo.showTree` | `ui.mode: "tree"` or `"single"` |
+| `modInfo.modFiles` | 在 `main.js` 和你的层文件中的导入 |
+| `layoutInfo.startTab` | 使用层句柄的 `info.startLayer` |
+| `layoutInfo.showTree` | `ui.mode: "tree"` 或 "single" |
 | `getPointGen()` | `pointGain(context)` |
 | `canGenPoints()` | `canGeneratePoints(context)` |
 | `isEndgame()` | `endgame(context)` |
-| Global `winText` | `winText` on the mod definition |
-| Global `backgroundStyle` | `ui.backgroundStyle` |
+| 全局 `winText` | 在 mod 定义中的 `winText` |
+| 全局 `backgroundStyle` | `ui.backgroundStyle` |
 | `maxTickLength()` | `simulation.maxTickSeconds` |
-| `addedPlayerData()` | Custom fields in a layer's `startState` |
-| `fixOldSave(oldVersion)` | `migrateSave(state, fromVersion)` for compatible 3.x save data |
+| `addedPlayerData()` | 层的 `startState` 中的自定义字段 |
+| `fixOldSave(oldVersion)` | 用于兼容 3.x 存档的 `migrateSave(state, fromVersion)` |
 
-Supply every required `info` field shown in the example. Include each layer handle once in `layers` and include standalone node handles in `nodes`.
+提供示例中所有必要的“信息”字段。每个层的句柄在“层”中包含一次，并在“节点”中包含独立节点句柄。
 
-`simulation.maxTickSeconds` uses seconds. Stock 2.x code also applies its limit to a seconds-based `diff`, despite some old documentation calling the value milliseconds. Check your old implementation before changing units. The new tick interval, `simulation.intervalMs`, is a separate setting in milliseconds.
+提供示例中显示的每个必填 `info` 字段。在 `layers` 中每个层句柄只出现一次，并在 `nodes` 中包含独立的节点句柄。
 
-There are no matching mod fields for `VERSION.name`, `changelog`, Discord links, or `displayThings`. Put that content into authored page text, an infobox, or a suitable extra layer. Don't leave the old keys in the new definition.
+`simulation.maxTickSeconds` 使用的是秒。Stock 2.x 代码也将其限制应用到以秒为单位的 `diff`，尽管一些旧文档将该值称为毫秒。在更改单位之前请检查你的旧实现。新的刻度间隔 `simulation.intervalMs` 是以毫秒为单位的单独设置。
 
-## Move Your Helper Functions
+没有匹配 `VERSION.name`、`changelog`、Discord 链接或 `displayThings` 的 mod 字段。将这些内容放到作者页面文本、信息框或合适的额外层中。不要在新定义中保留旧键。
 
-3.x doesn't accept arbitrary extra functions inside layer or feature definitions. Move shared calculations into ordinary module functions, then call them from the supported callbacks.
+## 移动你的助手功能
 
-The `doNotCallTheseFunctionsEveryTick` list goes away completely. A helper runs when your code calls it, the engine evaluates only its declared fields and callbacks.
+3.x 不接受层或特征定义内的任意额外函数。将共享计算迁移到普通模块函数中，然后从支持的回调中调用。
 
-Definitions are compiled during startup. Changing a definition object afterward doesn't reconfigure the game. Use callbacks for values which depend on current state, and reload after editing the project.
+`doNotCallTheseFunctionsEveryTick`列表完全消失了。助手程序在你的代码调用时运行，引擎只评估其声明字段和回调。
 
-:::note Check the Callback Badge
-Not every property accepts a callback. The reference gives callback support its own badge, separate from the value's type. A function which was accepted in a 2.x field may need to move elsewhere.
+定义是在启动时编译的。之后更改定义对象不会重新配置游戏。对于依赖当前状态的值使用回调，编辑项目后重新加载。
+
+:::note 查看“回调”标签
+并非所有属性都接受回调。引用为回调支持赋予了独立的标签，与值类型分开。在2.x字段中被接受的函数可能需要迁移到其他地方。
 :::
 
-## First Startup
+## 首次创业
 
-Start with one layer and a fresh save. Fix definition errors before adding more systems. Unknown fields and explicit `undefined` values are rejected, omit unused properties instead.
+从一层开始，并存一个新存档。在添加更多系统之前，先修正定义错误。拒绝未知字段和明确的`undefined`值，省略未使用的属性。
 
-Next, replace the old state access patterns in [Context and State](04/00/01).
+接下来，替换[上下文与状态](04/00/01)中的旧状态访问模式。

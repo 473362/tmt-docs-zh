@@ -1,43 +1,44 @@
-# Migrating from 2.x to 3.x
+# 从 2.x 迁移到 3.x
 
-Moving a 2.x game to 3.x is moving to a completely rewritten engine. Start with the current template and bring your game across a piece at a time. The formulas and ideas can stay, but the engine now uses modules, handles, and callback contexts to connect them.
+将一个 2.x 游戏迁移到 3.x，就相当于迁移到一个完全重写的引擎。最好从当前的模板开始，一步步把你的游戏迁移过来。公式和思路可以保留，但引擎现在使用模块、句柄和回调上下文来连接它们。
 
-This guide follows the usual 2.x `mod.js`, `addLayer`, `player`, and `tmp` APIs. If your mod changed the engine itself, you'll also need to check what those changes did and decide how to replace them.
+本指南遵循常用的 2.x `mod.js`、`addLayer`、`player` 和 `tmp` API。如果你的 mod 修改了引擎本身，你还需要检查这些更改做了什么，并决定如何替换它们。
 
-## Before You Start
+## 开始之前
 
-Keep a working copy of your 2.x project and export a few saves from different stages of the game. Work on the 3.x port separately, with a different `info.id` while testing.
+保留一份可运行的 2.x 项目副本，并从游戏的不同阶段导出一些存档。在开发 3.x 移植版本时，请单独处理，并在测试时使用不同的 `info.id`。
 
-Write down the results you expect at a few useful checkpoints: point gain, prestige gain, the next static cost, upgrade prices, and what survives each reset. These make it much easier to catch a port which runs but plays differently.
+写下你在几个有用检查点上预期的结果：点数增益、声望增益、下一个静态成本、升级价格，以及每次重置后哪些内容可以保留。这能让你更容易发现移植后游戏能运行但玩法不同的问题。
 
-:::warning Keep the Old Game and Saves
-3.x doesn't directly import 2.x save exports. Updating the engine files or reusing the old mod ID won't convert them. Keep the original exports until you've tested your own conversion or decided to start players fresh.
+:::warning 保留旧游戏和存档
+3.x 不会直接导入 2.x 的存档。更新引擎文件或重复使用旧的 mod ID 都不会转换它们。在你测试了自己的转换方案或决定让玩家从头开始之前，请保留原始导出存档。
 :::
 
-## Work Through the Port
 
-1. [Project and Mod Setup](04/00/00) moves global configuration into the new template.
-2. [Context and State](04/00/01) replaces `player`, `tmp`, `this`, and global helpers.
-3. [Layers and Resets](04/00/02) moves a layer into `defineLayer` and checks the reset behavior.
-4. [Gameplay Features](04/00/03) covers upgrades, buyables, clickables, challenges, milestones, and grids.
-5. [Pages and the Tree](04/00/04) rebuilds `tabFormat`, tabs, nodes, forms, and styling.
-6. [Saves and Release Checks](04/00/05) covers legacy conversion and testing before players switch.
+## 通过端口迁移工作
 
-Get one layer working on a fresh save before bringing over the rest. Add one collection at a time, then reconnect its effects to your formulas. Save conversion is much easier once the new state layout has stopped moving around.
+1. [项目和模组设置](04/00/00) 将全局配置移到新的模板中。  
+2. [上下文和状态](04/00/01) 替换 `player`、`tmp`、`this` 和全局辅助函数。  
+3. [层和重置](04/00/02) 将层移入 `defineLayer` 并检查重置行为。  
+4. [游戏功能](04/00/03) 涵盖升级、可购买项目、可点击项目、挑战、里程碑和网格。  
+5. [页面和树结构](04/00/04) 重建 `tabFormat`、标签页、节点、表单和样式。  
+6. [存档和发布检查](04/00/05) 涵盖旧存档转换以及玩家切换前的测试。
 
-## The Largest Changes
+在迁移其他内容之前，先在新存档上让一个层正常工作。一次添加一组，然后将其效果重新连接到你的公式中。一旦新的状态布局稳定下来，存档转换就会容易得多。
 
-| In 2.x | In 3.x |
+## 最大的变化
+
+| 在 2.x 中 | 在 3.x 中 |
 | --- | --- |
-| Files loaded through `modFiles` | JavaScript imports |
-| Global `modInfo` and functions | One `defineMod` call |
-| `addLayer("p", definition)` | Export a `defineLayer` handle and include it in `layers` |
-| `player.p`, `this.layer`, and `tmp.p` | State and helpers on the current callback's `context` |
-| Functions anywhere in a definition | Declared callback fields only. Helpers live outside the definition |
-| `doReset` and `layerDataReset` | Reset targets, retention, and reset hooks |
-| `tabFormat` component names and tuples | Layout objects under `ui.page` |
-| Old player JSON | Versioned save data containing `state.player`, `state.layers`, and options |
+| 通过 `modFiles` 加载的文件 | JavaScript 导入 |
+| 全局的 `modInfo` 和函数 | 一个 `defineMod` 调用 |
+| `addLayer("p", definition)` | 导出 `defineLayer` 句柄并包含到 `layers` 中 |
+| `player.p`、`this.layer` 和 `tmp.p` | 当前回调的 `context` 上的状态和辅助函数 |
+| 定义中随处可用的函数 | 仅允许声明回调字段。辅助函数在定义之外 |
+| `doReset` 和 `layerDataReset` | 重置目标、保留项目和重置钩子 |
+| `tabFormat` 组件名称和元组 | `ui.page` 下的布局对象 |
+| 旧的 player JSON | 包含 `state.player`、`state.layers` 和选项的版本化存档 |
 
-The property tables in this guide help you find the new home for something, but you'll likely have to read this guide completely and some of [the reference](01) to fully understand how to port your game. If this scares you, try building a simple game with 3.x first to get a feel for it. 
+本指南中的属性表可以帮助你找到某些内容的新位置，但你可能需要完整阅读本指南以及一些[参考资料](01)，才能完全理解如何迁移你的游戏。如果觉得有压力，可以先用 3.x 构建一个简单游戏来熟悉它。
 
-In the end, 3.x was designed and built by a 2.x developer and creator with the goal of being more creator-friendly and significantly more powerful. Learning the new engine will take time, but it gives you significantly more freedom in what you can create and makes complex games much easier to maintain.
+最终，3.x 是由一位 2.x 的开发者和创作者设计和构建的，目标是更加创作者友好并且功能明显更强大。学习新的引擎需要时间，但它让你在创作中拥有更大的自由度，并使复杂游戏的维护变得更容易。

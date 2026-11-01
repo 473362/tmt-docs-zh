@@ -1,100 +1,100 @@
-# Popups and Modals
+# 弹窗与模态框
 
-Use popups for temporary messages and modals when you need the player's response.
+临时信息用弹窗，遇到需要玩家回复的情况用模态框。
 
-## popup(request) {type: void}
+## popup(request) {type:void}
 
-Queues a popup with the following fields:
+队列弹窗，包含以下字段：
 
-- `message` {type: string} {required} {html}\
-Main content of the popup.
-- `title` {type: string} {optional} {html}\
-Heading above the message. Defaults to `""`.
-- `type` {type: "info" | "milestone" | "achievement" | "challenge"} {optional}\
-Selects the default popup appearance. Defaults to `"info"`.
-- `color` {type: string} {optional}\
-Overrides the popup background color. Defaults to the type's stock appearance. Automatic completion popups use the layer's color.
-- `durationMs` {type: number} {optional}\
-Visible lifetime in milliseconds. Must be an integer from `1` through `2147483647`. Defaults to `defineMod`'s `ui.notifications.durationMs`, which defaults to `3000`.
+- `message` {type:string} {必填} {html}  
+  弹窗的主要内容。
+- `title` {type:string} {可选} {html}  
+  消息上方的标题。默认为`""`。
+- `type` {type:"info" | "milestone" | "achievement" | "challenge"} {可选}  
+  选择默认弹窗样式。默认为`"info"`。
+- `color` {type:string} {可选}  
+  覆盖弹窗背景颜色。默认为类型的默认样式。自动完成的弹窗使用图层的颜色。
+- `durationMs` {type:number} {可选}  
+  弹窗显示时间，以毫秒为单位。必须是1到2147483647的整数。默认值是`defineMod`的`ui.notifications.durationMs`，默认为3000。
 
-Milestone, achievement, and challenge completion popups are queued automatically after successful completion hooks.
+里程碑、成就和挑战完成的弹窗会在成功完成后自动排队。
 
-Click a popup, or focus it and press Enter or Space, to dismiss it.
+点击弹窗，或者聚焦并按回车或空格键即可关闭。
 
 ```js
 onClick(context) {
-    context.popup({
-        title: "Energy Collected",
-        message: "You gained <strong>10 Energy</strong>!",
-        color: "#009696",
-        durationMs: 2000
-    });
+  context.popup({
+    title: "收集的能量",
+    message: "你获得了<strong>10点能量</strong>!",
+    color: "#009696",
+    durationMs: 2000
+  });
 }
 ```
 
-## Shared Modal Options
+## 共享模态选项
 
-Alerts, confirmations, and prompts use these fields:
+警报、确认和提示使用以下字段：
 
-- `message` {type: string} {required} {html}\
-Main modal content.
-- `title` {type: string} {optional} {html}\
-Modal heading. Defaults to `"Alert"`, `"Confirm"`, or `"Prompt"` for the corresponding method.
+- `message` {type: string} {必填} {html}  
+主要模态内容。
+- `title` {type: string} {可选} {html}  
+模态标题。对于相应方法，默认值为 `"Alert"`、`"Confirm"` 或 `"Prompt"`。
 
 ## alert(options, onClose) {type: void}
 
-Displays a message with a dismissal action.
+显示带有关闭操作的消息。
 
-- `onClose` {type: void} {optional} {callback-only}\
-Runs as `onClose(context)` when the player closes the alert. Defaults to no action.
+- `onClose` {type: void} {可选} {仅回调}  
+当玩家关闭警报时作为 `onClose(context)` 运行。默认为无操作。
 
 ## confirm(options, onResult) {type: void}
 
-Asks the player to accept or cancel an action.
+要求玩家接受或取消操作。
 
-- `onResult` {type: void} {required} {callback-only}\
-Runs as `onResult(context, confirmed)`. `confirmed` is `true` for acceptance and `false` for cancellation.
+- `onResult` {type: void} {必填} {仅回调}  
+作为 `onResult(context, confirmed)` 运行。`confirmed` 为 `true` 表示接受，`false` 表示取消。
 
 ```js
 onClick(context) {
-    context.confirm({
-        title: "Reset This Layer?",
-        message: "This will reset the layer! (wow)"
-    }, (current, confirmed) => {
-        if (confirmed) current.forceReset({ resetSource: true });
-    });
+  context.confirm({
+    title: "重置此层？",
+    message: "这将重置该层啊！"
+  }, (current, confirmed) => {
+    if (confirmed) current.forceReset({ resetSource: true });
+  });
 }
 ```
 
-Use `current` inside the result callback. The original `context` has already expired by the time the player responds.
+在结果回调中使用 `current`。玩家做出响应时，原始 `context` 已经过期。
 
 ## prompt(options, onResult) {type: void}
 
-Requests text input using the shared modal options plus these fields:
+使用共享的模态选项加上以下字段请求文本输入：
 
-- `initialValue` {type: string} {optional}\
-Starting text. Defaults to `""`.
-- `multiline` {type: boolean} {optional}\
-Uses a textarea instead of a single-line input. Defaults to `false`.
-- `readonly` {type: boolean} {optional}\
-Prevents editing, useful for copying generated text. Defaults to `false`.
-- `validate` {type: true | string} {optional} {callback-only}\
-Runs as `validate(context, text)` when text is submitted. Return `true` to accept it, or an error message to keep the same prompt open. Defaults to accepting any text.
+- `initialValue` {type: string} {可选}  
+初始文本。默认值为 `""`。
+- `multiline` {type: boolean} {可选}  
+使用多行文本框而不是单行输入。默认值为 `false`。
+- `readonly` {type: boolean} {可选}  
+禁止编辑，适合复制生成的文本。默认值为 `false`。
+- `validate` {type: true | string} {可选} {仅回调}  
+在文本提交时以 `validate(context, text)` 运行。返回 `true` 表示接受，返回错误信息则保持同一个提示框打开。默认值为接受任何文本。
 
-The result callback is the second argument:
+结果回调是第二个参数：
 
-- `onResult` {type: void} {required} {callback-only}\
-The second argument to `prompt`, not a field inside `options`. Runs as `onResult(context, text)` with accepted text, or `null` on cancellation.
+- `onResult` {type: void} {必填} {仅回调}  
+`prompt` 的第二个参数，而不是 `options` 内的字段。以 `onResult(context, text)` 运行，text 是接受的文本，取消时为 `null`。
 
 ```js
 onClick(context) {
-    context.prompt({
-        title: "Name Your Pet",
-        message: "Choose a name!",
-        initialValue: context.layerState.petName,
-        validate: (current, text) => text.trim() !== "" || "Please choose a name!"
-    }, (current, text) => {
-        if (text !== null) current.layerState.petName = text.trim();
-    });
+  context.prompt({
+    title: "给你的宠物起名字",
+    message: "选择一个名字！",
+    initialValue: context.layerState.petName,
+    validate: (current, text) => text.trim() !== "" || "请选择一个名字！"
+  }, (current, text) => {
+    if (text !== null) current.layerState.petName = text.trim();
+  });
 }
 ```

@@ -1,73 +1,77 @@
-# Pages and the Tree
 
-Start with the default layer page while porting gameplay. Once the features work, replace the old `tabFormat` with layout objects under `ui.page`.
+# 页面与树
 
-## Replace tabFormat
+在移植游戏玩法时从默认的层页面开始。一旦功能正常运行，就用 `ui.page` 下的布局对象替换旧的 `tabFormat`。
 
-This 2.x layout:
+## 替换 tabFormat
+
+这个 2.x 布局：
 
 ```js
 tabFormat: [
-    "main-display",
-    "prestige-button",
-    ["display-text", () => "Spend your points wisely!"],
-    "upgrades",
-    "buyables"
+"main-display",
+"prestige-button",
+["display-text", () => "明智地使用你的点数！"],
+"upgrades",
+"buyables"
 ]
 ```
 
-becomes this setup field:
+变成这个设置字段：
 
 ```js
 ui: {
     page: [
         { type: "section", feature: "main" },
-        { type: "text", text: "Spend your points wisely!" },
+        { type: "text", text: "明智地使用你的点数！" },
         { type: "section", feature: "upgrades" },
         { type: "section", feature: "buyables" }
     ]
 }
 ```
 
-The `main` section groups the layer's main currency, reset controls, records, and effect description. There aren't separate built-in layout entries for every old main-display subcomponent.
 
-A supplied `page` replaces the default layout. Add every section you want shown. Put the contents of an old `midsection` directly into the new page at the desired position.
+`main` 部分会把层的主要货币、重置控制、记录和效果描述分组。并不是每个旧的主显示子组件都有单独的内置布局项。
 
-| 2.x component | 3.x layout |
+提供的 `page` 会替代默认布局。把你想显示的每个部分都加上。将旧的 `midsection` 的内容直接放到新页面里你希望的位置。
+
+| 2.x 组件 | 3.x 布局 |
 | --- | --- |
-| `display-text`, `raw-html` | `{ type: "text", text: ... }` |
+| `display-text`、`raw-html` | `{ type: "text", text: ... }` |
 | `display-image` | `{ type: "image", src: ..., alt: ... }` |
 | `blank` | `{ type: "spacer", size: ... }` |
-| `row`, `column` | Same type names, with nested nodes in `children` |
-| `upgrades`, `buyables`, other collections | `section` with the matching `feature` |
-| A single upgrade or buyable | A collection section with `ids: ["11"]` |
-| `bar`, `infobox` | A `bars` or `infoboxes` section with selected `ids` |
-| Upgrade/buyable/clickable trees | A section with `layout: "tree"` and explicit `rows` |
-| `text-input`, `slider`, `drop-down` | Declared `forms`, displayed through a forms section |
-| `toggle` | A toggle node with a `binding` |
-| `microtabs` and named `tabFormat` tabs | A `tabs` node |
-| `layer-proxy` and embedded layer content | A `peek` embed |
+| `row`、`column` | 类型名称相同，嵌套节点放在 `children` 中 |
+| `upgrades`、`buyables` 及其他集合 | 对应 `feature` 的 `section` |
+| 单个 upgrade 或 buyable | 带 `ids: ["11"]` 的集合 section |
+| `bar`、`infobox` | 带选定 `ids` 的 `bars` 或 `infoboxes` section |
+| Upgrade/buyable/clickable 树 | 带 `layout: "tree"` 和明确 `rows` 的 section |
+| `text-input`、`slider`、`drop-down` | 声明 `forms`，通过 forms section 显示 |
+| `toggle` | 带有 `binding` 的 toggle 节点 |
+| `microtabs` 和命名的 `tabFormat` tabs | `tabs` 节点 |
+| `layer-proxy` 和嵌入的层内容 | `peek` 嵌入 |
 
-For an upgrade tree, assuming the three IDs are declared:
+对于一个升级树，假设已经声明了这三个 ID：
+
+对于升级树，假设三个 ID 已经声明：
 
 ```js
 ui: {
-    page: [{
-        type: "section",
-        feature: "upgrades",
-        layout: "tree",
-        rows: [["11", "12"], ["21"]]
-    }]
+page: [{
+    type: "section",
+    feature: "upgrades",
+    layout: "tree",
+    rows: [["11", "12"], ["21"]]
+}]
 }
 ```
 
-Only upgrade, buyable, and clickable sections support this tree layout. Other sections use their ordinary layouts and item selection rules.
+只有升级、可购买和可点击的部分支持这种树形布局。其他部分则使用它们普通的布局和物品选择规则。
 
-## Tabs and Microtabs
+## 标签和微标签
 
-Tabs are now infinitely nestable, and there is no longer any distinction between Tabs or Microtabs.
+标签现在可以无限嵌套，而且标签和微标签之间不再有区别。
 
-Use an ID for both the tab group and each tab:
+为标签组和每个标签使用一个 ID：
 
 ```js
 ui: {
@@ -76,16 +80,16 @@ ui: {
         id: "main-tabs",
         tabs: [
             {
-                id: "main",
-                title: "Main",
-                page: [
-                    { type: "section", feature: "main" },
-                    { type: "section", feature: "upgrades" }
-                ]
+            id: "main",
+            title: "主要",
+            page: [
+                { type: "section", feature: "main" },
+                { type: "section", feature: "upgrades" }
+            ]
             },
             {
                 id: "generators",
-                title: "Generators",
+                title: "生成器",
                 page: [{ type: "section", feature: "buyables" }]
             }
         ]
@@ -93,64 +97,64 @@ ui: {
 }
 ```
 
-A tab's `shown` replaces its old visibility condition, and `page` replaces `content`. Use `resetNotify` where the old tab used `prestigeNotify`. Tab glow colors come from the layer's tree settings.
+标签的 `shown` 取代了旧的可见性条件，而 `page` 取代了 `content`。在旧标签使用 `prestigeNotify` 的地方，请使用 `resetNotify`。标签的发光颜色来自层的树设置。
 
-For embedded layers, `mode: "peek"` renders another layer inline using `layer: otherHandle`. `mode: "normal"` offers normal navigation and `mode: "deep"` opens a target alongside the origin with Back navigation. See [defineLayer](01/01) for more on embeds and tabs.
+对于嵌入式层，`mode: "peek"` 使用 `layer: otherHandle` 在内联渲染另一个层。`mode: "normal"` 提供正常导航，而 `mode: "deep"` 会在目标旁边打开层并带有返回导航。更多关于嵌入和标签的信息，请参见 [defineLayer](01/01) 。
 
-## Forms and Toggles
+## 表单和切换按钮
 
-Declare form controls in setup instead of passing saved-field names to tuple components. A form can own its saved value through `defaultValue`, or bind to a field from `startState` through `value.get` and `value.set`.
+在 setup 中声明表单控件，而不是将已保存字段的名称传给元组组件。表单可以通过 `defaultValue` 拥有自己的默认值，或者通过 `value.get` 和 `value.set` 绑定到 `startState` 中的字段。
 
-For dropdowns, call `define.dropdown(options, configuration)` inside setup and put its result in `forms`. The choices go in the first argument and the label, storage or binding, and change hook go in the second. The helper supplies `type` and `options` and infers callback values from the choices. See [defineLayer](01/01) for an example.
+对于下拉菜单，在 setup 中调用 `define.dropdown(options, configuration)`，然后把结果放入 `forms`。选项放在第一个参数，标签、存储或绑定，以及变更钩子放在第二个参数。这个辅助函数会提供 `type` 和 `options`，并从选项中推断回调值。示例请参见 [defineLayer](01/01)。
 
-For example, if the layer initializes `auto: false`, a page toggle can use:
+例如，如果层初始化时 `auto: false`，页面切换可以这样使用：
 
 ```js
 ui: {
     page: [{
         type: "toggle",
-        label: "Auto Prestige",
+        label: "自动声望",
         binding: {
-            get: context => context.layerState.auto,
-            set(context, value) { context.layerState.auto = value; }
+        get: context => context.layerState.auto,
+        set(context, value) { context.layerState.auto = value; }
         }
     }]
 }
 ```
 
-Don't expect a binding's setter to create its initial state. Initialize the backing field yourself. Engine-owned forms save under the layer's `inputs`.
+不要指望绑定的 setter 会创建初始状态。自己初始化支撑字段。引擎管理的表单会在层的 `inputs` 下保存数据。
 
-## Move Tree Settings
+## 移动树设置
 
-Layer tree appearance lives in a `tree` object inside setup:
+层树的外观现在在 setup 里的 `tree` 对象中：
 
-| 2.x layer field | 3.x |
+| 2.x 层字段 | 3.x |
 | --- | --- |
 | `displayRow` | `tree.row` |
 | `position` | `tree.position` |
 | `layerShown` | `tree.shown` |
-| `branches` | `tree.connections`, using handles or connection objects |
+| `branches` | `tree.connections`，使用 handles 或连接对象 |
 | `nodeStyle` | `tree.style` |
 | `image` | `tree.image` |
 | `marked` | `tree.mark` |
-| `tooltip`, `tooltipLocked` | One `tree.tooltip` callback which checks state |
+| `tooltip`, `tooltipLocked` | 一个 `tree.tooltip` 回调函数来检查状态 |
 | `glowColor` | `tree.actionGlowColor` |
-| `prestigeNotify` | Setup `resetNotify` |
+| `prestigeNotify` | 设置 `resetNotify` |
 
-For a side position, use `tree.row: "left"` or `"right"`. Putting a layer on a side doesn't give it the old side-layer reset exemption, configure reset targets or retention explicitly to preserve that behavior.
+如果想放在侧边位置，使用 `tree.row: "left"` 或 `"right"`。把层放在侧边不会自动获得旧的侧边层重置豁免，要想保留这个行为需要显式配置重置目标或保留选项。
 
-Tree visibility defaults to the layer's unlocked state. Position defaults to definition order rather than alphabetical ID order. Add explicit positions where the old arrangement matters.
+树的可见性默认根据层是否解锁。位置默认按定义顺序，而不是按字母 ID 顺序。如果旧排序重要，记得加上明确的位置。
 
-Old `treeLayout` arrays don't transfer directly. Arrange the main tree through rows, positions, and connections. Embedded trees use the new embed fields rather than a copied array of old node IDs.
+旧的 `treeLayout` 数组不能直接迁移。主树通过行、位置和连接来安排。嵌入的树使用新的嵌入字段，而不是复制旧节点 ID 的数组。
 
-`addNode` becomes [defineNode](01/02). It returns a handle which belongs in the mod's `nodes` list. Its appearance fields are on the node definition itself, and its callbacks use mod context because it has no layer state.
+`addNode` 变成了 [defineNode](01/02)。它返回一个 handle，属于 mod 的 `nodes` 列表。外观字段在节点定义里，其回调使用 mod 上下文，因为它没有层状态。
 
-## Styling, Messages, and Engine Extensions
+## 样式、消息和引擎扩展
 
-Layer `style` becomes `ui.style`, and `componentStyles` becomes `ui.componentStyles`. Review the component names too, old CSS selectors don't automatically match the new engine's styles. See [Styling](01/11) for supported classes and attributes.
+层 `style` 变成了 `ui.style`，而 `componentStyles` 变成了 `ui.componentStyles`。也请检查组件名称，旧的 CSS 选择器不会自动匹配新引擎的样式。有关支持的类和属性，请参见 [Styling](01/11)。
 
-Port popup calls to `context.popup({ message, ... })`. Port confirmation and prompt flows to `context.confirm` or `context.prompt`.
+将弹出调用迁移到 `context.popup({ message, ... })`。将确认和提示流程迁移到 `context.confirm` 或 `context.prompt`。
 
-HTML-badged fields accept authored HTML, but they don't compile Vue templates or turn HTML event attributes into context actions. Use clickables and forms for interactive game controls.
+带有 HTML 标记的字段接受已编写的 HTML，但不会编译 Vue 模板，也不会将 HTML 事件属性转换为上下文动作。对于互动游戏控制，请使用可点击元素和表单。
 
-Finally, plan the save transition in [Saves and Release Checks](04/00/05).
+最后，在 [Saves and Release Checks](04/00/05) 中规划保存过渡。

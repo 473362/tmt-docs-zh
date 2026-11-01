@@ -1,66 +1,66 @@
-# Finishing Up
+# 完成收尾工作
 
-You now have point generation, two reset layers, an upgrade, and a custom resource with a clickable. Let's give the game an ending and cover a few things you'll need as you keep working.
+你现在已经有了点数生成、两个重置层、一个升级以及一个可点击的自定义资源。让我们给游戏一个结局，并介绍一些你在继续开发时需要注意的事情。
 
-## Add a Goal
+## 添加目标
 
-In `main.js`, add these properties to the `defineMod` object after `pointGain`.
+在 `main.js` 中，在 `defineMod` 对象的 `pointGain` 后添加这些属性。
 
 ```js
 endgame: context => context.stateOf(crystals).points.gte(3),
-winText: "You collected three Crystals and completed your first tree!"
+winText: "你收集了三个水晶并完成了你的第一棵树！"
 ```
 
-At three crystals, the engine records the win and shows the endgame panel. Simulation pauses until the player chooses to `Keep Going!`. That choice resumes the game while keeping the win.
+当收集到三个水晶时，引擎会记录胜利并显示结局面板。模拟会暂停，直到玩家选择 `继续游戏!`。这个选择会在保留胜利的情况下继续游戏。
 
-Refresh and play toward the goal. If your save already has three crystals, you should reach the ending on the next tick.
+刷新并朝目标努力玩。如果你的存档已经有三个水晶，你应该会在下一次更新中到达结局。
 
-## Commit Your Work
+## 提交你的工作
 
-When you're happy with your code, review and commit it:
+当你对代码满意时，查看并提交它：
 
 ```sh
 git add -A
-git commit -m "Build the first version of my tree"
+git commit -m "构建我的树的第一个版本"
 ```
 
-That records the changes locally. Push through Git or GitHub Desktop when you're ready to add those commits to your repository.
+这样会在本地记录更改。当你准备好将这些提交添加到你的仓库时，可以通过 Git 或 GitHub Desktop 推送。
 
-## Changing a Game Which Already Has Saves
+## 修改已有存档的游戏
 
-Keep the game's `info.id`, layer IDs, and feature IDs stable once you want saves to keep working. Renaming an upgrade's title is different from renaming the key which identifies it.
+一旦你希望存档还能继续使用，就要保持游戏的 `info.id`、层级 ID 和功能 ID 稳定。不仅仅是重命名升级的标题，和重命名用来标识它的 key 是不同的。
 
-Adding the top-level `energy` field earlier worked because loading filled in a missing default. Renaming that saved field later needs a migration if you want to preserve its value.
+之前早些时候添加顶层 `energy` 字段能正常工作，是因为加载时会填充缺失的默认值。如果之后重命名了已保存的字段，要想保留其值，需要进行迁移。
 
-`info.version` is for display. Use `saveVersion` and `migrateSave` when your saved layout changes in a way that needs conversion. Don't increase `saveVersion` just because you changed a cost or description.
+`info.version` 只是用于显示。当你的存档布局变化需要转换时，使用 `saveVersion` 和 `migrateSave`。不要仅仅因为改变了成本或描述就增加 `saveVersion`。
 
-The [defineMod reference](01/00) has a field-renaming example, and [Saves and Errors](01/09) explains loading and recovery. For early experiments you don't need to preserve, exporting and then using Hard Reset is another way to test fresh state.
+[defineMod 参考](01/00) 有字段重命名的示例，[存档和错误](01/09) 解释了加载和恢复。对于不需要保留的早期实验，也可以先导出存档，然后使用硬重置来测试新的状态。
 
-## Updating TMT
+## 更新 TMT
 
-Save your work and stop the runtime before updating. Use the same [update launcher](00/00?s=update-tmt) you ran when creating your game.
+在更新前保存工作并停止运行时。使用创建游戏时运行过的同一个 [更新启动器](00/00?s=update-tmt)。
 
-The updater shows the installed engine version and offers to update the current release branch, switch between stable and beta, or install a specific version. Most users should only ever need the first option.
+更新器会显示已安装的引擎版本，并提供更新当前发布分支、在稳定版和测试版之间切换，或安装特定版本的选项。大多数用户通常只需要第一个选项。
 
-The updater also updates the runtime and fetches its own update script.
+更新器还会更新运行时并获取自身的更新脚本。
 
-After updating, start the game again and check that it still works. Commit the changed submodules so your repository records the version you're using.
+更新后，再次启动游戏并检查是否仍然正常运行。提交变更后的子模块，这样你的代码库就记录了你正在使用的版本。
 
-## Where to Go Next
+## 下一步去哪里
 
-When you're ready to share your game, follow [Publishing](02) to put it online. If something isn't working, [Troubleshooting](03) covers common problems and how to investigate them.
+当你准备好分享你的游戏时，按照 [发布](02) 将它上线。如果遇到问题，[故障排除](03) 会介绍常见问题及如何调查它们。
 
-Pick a feature which adds something to your game, then use its reference while you build it:
+选择一个能为你的游戏增加内容的功能，然后在构建时参考它：
 
-- [defineLayer](01/01) covers buyables, milestones, challenges, automation, tabs, and the rest of a layer's content.
-- [defineResource](01/03) lets ordinary costs use a custom balance such as Energy.
-- [Context](01/06) lists the actions and state available inside callbacks.
-- [Decimal](01/04) and [Formatting](01/05) cover calculations and displaying large numbers.
-- [Popups and Modals](01/08) lets you send messages or ask the player for a response.
-- [Styling](01/11) explains how to give the game its own appearance.
+- [defineLayer](01/01) 涵盖可购买项目、里程碑、挑战、自动化、标签页以及一层的其他内容。
+- [defineResource](01/03) 让普通成本可以使用像能量这样的自定义平衡。
+- [Context](01/06) 列出回调中可用的动作和状态。
+- [Decimal](01/04) 和 [格式化](01/05) 处理计算和显示大数字。
+- [弹出窗口和模态](01/08) 允许你发送消息或向玩家询问回应。
+- [样式](01/11) 解释如何给游戏设置自己的外观。
 
-A useful next exercise is a milestone on the crystal layer which lets the player keep the Doubler through a crystal reset. You'll need a milestone condition and a retention rule on prestige. Or try a buyable which increases energy generation, then show its production rate beside the balance.
+一个有用的下一步练习是在水晶层上设置一个里程碑，让玩家在水晶重置后保留倍增器。你需要一个里程碑条件和声望保留规则。或者尝试一个可购买项目，它能提升能量生成，并在余额旁显示其产量。
 
-You don't need to add every feature to make a game. Start with the loop you've built, play it, and decide what would make the next reset more interesting.
+你不需要把每个功能都加到游戏里。先从你构建的循环开始，玩一玩，然后决定下一次重置什么会更有趣。
 
-Good luck and have fun!
+祝你好运，玩得开心！

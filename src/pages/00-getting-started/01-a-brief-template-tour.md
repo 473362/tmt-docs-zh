@@ -1,6 +1,6 @@
-# A Brief Tour of the Template
+# 模板简要导览
 
-The template should contain the following: 
+模板应包含以下内容：
 
 ```text
 main.js
@@ -19,54 +19,54 @@ tmt/
     updater/
 ```
 
-You'll spend most of your time in `main.js` and `src`. The other files help load, run, or edit your game.
+你大部分时间会在 `main.js` 和 `src` 中工作。其他文件用来加载、运行或编辑你的游戏。
 
 ## main.js
 
-This is your game's entrypoint. It imports `defineMod` from `"tmt"`, imports the prestige layer, and calls `defineMod` to start the game.
+这是你游戏的入口文件。它从 `"tmt"` 导入 `defineMod`，导入声望层，并调用 `defineMod` 来启动游戏。
 
-The object passed to `defineMod` configures your game.
+传给 `defineMod` 的对象用来配置你的游戏。
 
 ## src/prestige.js
 
-This file defines the template's prestige layer and exports it as `prestige`.
+此文件定义模板的声望层，并将其导出为 `prestige`。
 
-As your game grows, put more layer files in `src`. Each file can export its own handle, which `main.js` imports and includes in the game.
+随着游戏的增长，可以在 `src` 中放入更多层文件。每个文件都可以导出自己的 handle，然后 `main.js` 导入并包含到游戏中。
 
 ## index.html
 
-This is the page your browser loads. It creates the `#tmt` element, loads `main.js`, and links the engine's stylesheet.
+这是浏览器加载的页面。它创建 `#tmt` 元素，加载 `main.js`，并链接引擎的样式表。
 
-Its import map makes `"tmt"` refer to `/tmt/engine/dist/tmt.js`, that's why your JavaScript can use a short import instead of a path to the engine folder!
+它的 import map 让 `"tmt"` 指向 `/tmt/engine/dist/tmt.js`，所以你的 JavaScript 可以用短路径导入，而不用写引擎文件夹的完整路径！
 
 ## tsconfig.json
 
-This configures your editor's JavaScript checking and tells it where to find TMT's declarations. Even though the files end in `.js`, your editor can suggest properties and point out mistakes using this configuration.
+它配置了编辑器的 JavaScript 检查，并告诉编辑器在何处找到 TMT 的声明。即使文件后缀是 `.js`，编辑器也可以用这个配置来提供属性建议并指出错误。
 
-You can leave it as it is. The tsconfig is specifically designed to give JS users the advantages of TS at no cost.
+你可以保持默认设置。tsconfig 专门为 JS 用户设计，让你无成本享受到 TS 的好处。
 
 ## assets
 
-This is a convenient place for your own images. The template includes `tmt.png`, which `index.html` uses as the browser tab's icon.
+这是存放你自己图片的方便位置。模板里包含 `tmt.png`，`index.html` 将它用作浏览器标签图标。
 
-You can replace the icon later if you so choose.
+你以后可以根据需要替换图标。
 
 ## scripts
 
-The `run` scripts start the local server. The `update` scripts fetch engine and runtime updates through Git.
+`run` 脚本启动本地服务器。`update` 脚本通过 Git 获取引擎和运行时更新。
 
-You already used both in [Creating a Game](00/00). We'll cover later updates in [Finishing Up](00/06).
+你在 [创建游戏](00/00) 中已经使用过这两个脚本。稍后在 [完成](00/06) 中我们会讲更新内容。
 
 ## tmt
 
-:::danger Here Be Dragons
-You should not, under any circumstances, modify these files or add files to this folder or its subfolders. These are the local copies of the TMT submodules you've read about previously. The updater manages them and will refuse to update submodules with local changes!
+:::danger 这里是危险区
+无论如何都不应修改这些文件，也不要向此文件夹或其子文件夹添加文件。这些是你之前看到的 TMT 子模块的本地副本。更新程序会管理它们，并且如果本地有更改，它会拒绝更新子模块！
 :::
 
-These folders are Git submodules:
+这些文件夹是 Git 子模块：
 
-- `engine` contains the engine, including `dist/tmt.js`, its stylesheet, and declarations.
-- `runtime` contains the programs used to serve the project.
-- `updater` contains the update script.
+- `engine` 包含引擎，包括 `dist/tmt.js`、样式表和声明文件。
+- `runtime` 包含用来服务项目的程序。
+- `updater` 包含更新脚本。
 
-Ready to make the template yours? Continue to [Configuring Your Game](00/02).
+准备好让模板成为你自己的了吗？继续阅读 [配置游戏](00/02)。

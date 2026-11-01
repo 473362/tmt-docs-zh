@@ -1,27 +1,27 @@
-# The Modding Tree
+# 模组树
 
-Welcome to the documentation for The Modding Tree!
+欢迎阅读《模组树》的文档！
 
-These pages cover everything you need to know about TMT, from setting up your first project to the details of the engine's API.
+这些页面涵盖了你需要了解的《模组树》的一切内容，从搭建第一个项目到引擎 API 的详细说明。
 
-## What is The Modding Tree?
+## 什么是模组树？
 
-The Modding Tree, commonly abbreviated as TMT, is an engine for creating incremental games with JavaScript.
+模组树，通常缩写为 TMT，是一个用 JavaScript 创建增量游戏引擎。
 
-Layers can form a prestige tree, but you can also hide the tree and build your game around a single page, tabs, or embedded layers. TMT is designed to let creators be as creative as they desire.
+可以用层组成声望树；但也可以隐藏树，并围绕单个页面、标签或嵌入层来构建你的游戏。TMT 的设计目标是让创作者可以尽情发挥创意。（梦到什么做什么都行）
 
-## Where to Start
+## 从哪里开始
 
-- Making your first game? Follow the [Getting Started Guide](00). It takes the template from a working prestige layer to a small game with upgrades, energy, and a second layer.
-- Looking up a property or function? Open [the reference](01) for definitions, callback contexts, state, styling, and engine behavior.
-- Ready to share your game? Follow [Publishing](02) to prepare the files and host them.
-- Something isn't working? Check [Troubleshooting](03) for common problems and how to find their causes.
-- Bringing over a TMT v2.x game? Use [Migrating from 2.x to 3.x](04/00) for API changes, before-and-after examples, and save conversion.
+- 制作你的第一款游戏？请参考[入门指南](00)。它会带你从一个可工作的声望层模板，到带有升级、能量和第二层的小型游戏。
+- 想查找某个属性或函数？打开[参考手册](01)，查看定义、回调上下文、状态、样式和引擎行为。
+- 准备分享你的游戏？参考[游戏发布](02)指南，准备文件并托管。
+- 遇到问题？查看[故障排除](03)，了解常见问题及其原因。
+- 想迁移 TMT v2.x 游戏？请使用[从 2.x 到 3.x 的变化](04/00)，了解 API 变化、前后对比示例和存档转换。
 
-Some familiarity with JavaScript will help, but you don't need to learn the entire engine before making something. Start with the template, change one thing, and try it in the browser!
+对 JavaScript 有一定了解会有帮助，但你不需要在制作游戏之前掌握整个引擎。从模板开始，修改一个部分，然后在浏览器中尝试！
 
-## A Small History Lesson
+## 一点历史小课
 
-TMT is called "The Modding Tree" because it began as a framework for creating mods of Jacorb90's [Prestige Tree](https://jacorb90.me/Prestige-Tree/). TMT has evolved significantly since that time and is now a full-fledged incremental engine.
+TMT 被称为“模组树”，是因为它最初是用来创建 Jacorb90 的 [声望树](https://jacorb90.me/Prestige-Tree/) 模组的框架。自那时以来，TMT 已经显著发展，现在成为了一个成熟的增量式引擎。
 
-TMT games are still often called "mods", and their developers "modders". These names have stuck around even as TMT has grown into an engine for fully original games.
+TMT 游戏仍然常被算做模组，开发者在英文里被称为“modders”。即使 TMT 已经发展为制作原创游戏的引擎，这些称呼仍然沿用至今。

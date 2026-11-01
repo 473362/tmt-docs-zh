@@ -1,62 +1,62 @@
-# Simulation
+# 模拟
 
-TMT's simulation can be configured through `defineMod.simulation`, and per-tick gameplay behavior can be added to `update`, `automate`, and passive generation callbacks.
+TMT 的模拟可以通过 `defineMod.simulation` 配置，每个周期的游戏行为可以添加到 `update`、`automate` 和被动生成回调中。
 
-## Time
+## 时间
 
-- `delta` {type: number} {required}\
-Elapsed time between this tick and the last, in seconds. Can be much larger than the usual timer interval in some cases.
+- `delta` {type: number} {required}  
+两个周期之间经过的时间，单位为秒。在某些情况下可能远大于通常的计时器间隔。
 
-The timer measures actual elapsed time with `performance.now()`. A requested 50 ms interval doesn't guarantee that every update receives `0.05`.
+计时器使用 `performance.now()` 测量实际经过的时间。即使请求了 50 毫秒的间隔，也不能保证每次更新都收到 `0.05`。
 
-## Update Order
+## 更新顺序
 
-Each advance uses this order:
+每次进展按以下顺序执行：
 
-1. Stop if the engine is fatal, already advancing, or won without Keep Going.
-2. Increment `player.timePlayed` and every layer's `resetTime`.
-3. Evaluate `canGeneratePoints`. When enabled, add `pointGain * delta` to points and clamp the result to at least zero.
-4. Run the mod's `update(context, delta)`.
-5. In ascending row order, check layer unlocks, apply passive generation, and run layer updates.
-6. In descending row order, run layer automation.
-7. In ascending row order, award milestones and then achievements in declaration order.
-8. Evaluate endgame if the player hasn't already won, validate state, and save on a win.
+1. 如果引擎出现致命错误、已经在进展中，或者没有使用“继续”就胜利，则停止。
+2. 增加 `player.timePlayed` 和每个层级的 `resetTime`。
+3. 评估 `canGeneratePoints`。启用时，将 `pointGain * delta` 加到点数上，并确保结果至少为零。
+4. 运行模组的 `update(context, delta)`。
+5. 按行号升序检查层级解锁、应用被动生成，并运行层级更新。
+6. 按行号降序运行层级自动化。
+7. 按行号升序奖励里程碑，然后按声明顺序奖励成就。
+8. 如果玩家还没胜利，评估游戏结束情况，校验状态，并在胜利时保存。
 
-## Using delta
+## 使用 delta
 
-Multiply rates by delta time when adding your own per-second production:
+在添加你自己每秒的产量时，将速率乘以 delta 时间：
 
 ```js
 update(context, delta) {
-    const state = context.layerState;
-    state.energy = state.energy.add(new Decimal(5).mul(delta));
+  const state = context.layerState;
+  state.energy = state.energy.add(new Decimal(5).mul(delta));
 }
 ```
 
-Adding `5` without multiplying by `delta` would award five per callback, making production depend on timer frequency and not consider offline time at all.
+如果直接加 `5` 而不乘以 `delta`，每次回调都会增加五个单位，这会让产量依赖于计时器的频率，并且完全不考虑离线时间。
 
-`automate(context)` has no delta argument. It runs once per advance and is suited to issuing actions such as purchases or resets.
+`automate(context)` 没有 delta 参数。它每次 advance 只运行一次，更适合执行购买或重置等操作。
 
-## Locked and Deactivated Layers
+## 锁定和禁用的图层
 
-The following table explains how locked and deactivated layers handle per-tick behavior:
+下表说明了锁定和禁用图层在每刻行为中的处理方式：
 
-| Work | Locked layer | Deactivated layer |
+| 工作 | 锁定的图层 | 禁用的图层 |
 | --- | --- | --- |
-| Reset Timer | Advances | Advances |
-| Unlock Check (while locked) | Runs | Runs |
-| Passive Generation and Update | Run | Skipped |
-| Automation | Runs | Skipped |
-| Milestone and Achievement Checks | Checked | Skipped |
+| 重置计时器 | 前进 | 前进 |
+| 解锁检查（锁定时） | 运行 | 运行 |
+| 被动生成和更新 | 运行 | 跳过 |
+| 自动化 | 运行 | 跳过 |
+| 里程碑和成就检查 | 检查 | 跳过 |
 
-## Offline Progress
+## 离线进度
 
-Loading computes elapsed time since `savedAt`, clamps it to at least zero, and limits it to `offlineLimitHours * 3600`. The saved `offlineProgressEnabled` option can disable this
+加载时会计算自 `savedAt` 起经过的时间，将其限制为至少为零，并限制在 `offlineLimitHours * 3600` 内。已保存的 `offlineProgressEnabled` 选项可以禁用该功能。
 
-:::note Offline Progress is One Tick
-All offline time is passed through one ordinary simulation advance. The tick length cap doesn't apply. Mod and layer updates run once with the offline `delta`.
+:::note 离线进度只计算一次
+所有离线时间都只进行一次普通的模拟推进。刻度长度限制不适用。MOD 和层更新在离线 `delta` 下只运行一次。
 
-For example, one hour offline gives a delta of `3600` seconds. A linear rate of five per second grants `18000`. An automation callback that buys one upgrade runs once, not once for each missed tick. Thresholds, compounding, and resets can therefore produce different results from an hour of online activity.
+例如，离线一小时会得到 `3600` 秒的 delta。每秒线性增长五的话，总共得到 `18000`。自动化回调买一次升级只运行一次，而不是每个错过的刻度都执行一次。因此，阈值、复利和重置可能会产生与在线活动一小时不同的结果。
 :::
 
-New games, failed loads, and imports don't receive offline progress.
+新游戏、加载失败和导入不会获得离线进度。

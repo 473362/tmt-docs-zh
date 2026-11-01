@@ -1,46 +1,46 @@
-# Configuring Your Game
+# 配置你的游戏
 
-Let's give the game its own identity and look at how it earns points.
+让游戏拥有自己的个性，并看看它是如何赚取点数的。
 
-## Giving Your Game an Identity
+## 给你的游戏一个身份
 
-The `info` object holds the game's basic information:
+`info` 对象保存了游戏的基本信息：
 
-- `id` selects the game's save location. Choose a unique ID for your project and keep it stable.
-- `name` and `author` tell players what they're playing and who made it.
-- `version` is the displayed version.
-- `pointsName` names the main currency.
-- `initialPoints` sets the main currency for a new game.
-- `startLayer` selects the initial layer using its handle.
+- `id` 用来选择游戏的存储位置。为你的项目选择一个唯一的 ID，并保持不变。
+- `name` 和 `author` 告诉玩家他们在玩什么游戏以及谁制作了它。
+- `version` 是显示的版本号。
+- `pointsName` 给主要货币命名。
+- `initialPoints` 设置新游戏的初始主货币。
+- `startLayer` 使用句柄选择初始层。
 
-Changing the template's `id` starts using a different save location, so seeing a fresh game after this edit is expected. Changing `initialPoints` later won't replace the balance in an existing save.
+更改模板的 `id` 会开始使用不同的存档位置，所以修改后看到一个全新的游戏是正常的。之后更改 `initialPoints` 不会替换已有存档中的余额。
 
-## Including Layers
+## 包含层
 
-`layers: [prestige]` includes the imported prestige layer in the game. Defining a layer in a file isn't enough, it needs to be imported and included here.
+`layers: [prestige]` 将导入的声望层包含到游戏中。在文件中定义一个层是不够的，它需要被导入并在这里包含。
 
-Each handle should appear only once. Later, we'll add a second handle to this list.
+每个句柄应只出现一次。之后，我们会在这个列表中添加第二个句柄。
 
-## Generating Points
+## 生成点数
 
-`pointGain` supplies a rate per second. The engine applies elapsed time for you.
+`pointGain` 提供每秒的点数获取。引擎会为你应用经过的时间。
 
-This function reads the prestige layer's points, adds one, and returns the result:
+这个函数读取声望层的 点数，加一，然后返回结果：
 
 ```js
 pointGain: context => context.stateOf(prestige).points.add(1)
 ```
 
-At zero Prestige Points, the rate is one point per second. At three Prestige Points, it's four points per second.
+在零声望点数时，速率是一秒一点数。在三声望点数时，每秒获得四点数。
 
-The arrow function is a callback, a function the engine calls when it needs the information. `context` gives that callback access to current game state, and `stateOf(prestige)` selects the prestige layer's state.
+箭头函数是一个回调，即引擎在需要信息时调用的函数。`context` 让该回调可以访问当前游戏状态，而 `stateOf(prestige)` 则选择声望层的状态。
 
-Currency values use [Decimal](01/04), so we write `.add(1)` instead of `+ 1`.
+资源数值使用 [Decimal](01/04)，因此我们写 `.add(1)` 而不是 `+ 1`。
 
-## Check Your Game
+## 检查你的游戏
 
-On a fresh save, wait until you reach 10 points and prestige once. You should gain one Prestige Point and begin earning two points per second.
+在新存档中，等待直到你达到 10 点数并进行一次声望。你应获得一点声望点数，并开始每秒获得两点数。
 
-If you need to start over while following the guide, use the game's Hard Reset in Settings. That clears your progress for this game, so export a save first if you want to keep it.
+如果在跟随指南的过程中需要重新开始，请在设置中使用游戏的“硬重置”。这会清除你在该游戏中的进度，所以如果想保留进度，请先导出存档。
 
-You can find the rest of the mod settings in [defineMod](01/00). Next, we'll add an upgrade in [Layers and Upgrades](00/03).
+你可以在 [defineMod](01/00) 中找到其余的模组设置。接下来，我们将在 [层和升级](00/03) 中添加升级。

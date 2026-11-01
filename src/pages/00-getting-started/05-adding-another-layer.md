@@ -1,22 +1,19 @@
-# Adding Another Layer
+# 添加另一层
 
-Our next layer will turn Prestige Points into Crystals. Crystals will multiply main point gain, but earning them will
-reset the prestige layer's progress.
+我们下一层会把声望点数转化为水晶。水晶会增加主点数的增益，但获得它们会重置声望层的进度。
 
-## Create the Layer
+## 创建层
 
-Create `src/crystals.js`. Before you read onwards, try to create a layer with the following properties:
+创建 `src/crystals.js`。在继续阅读之前，先尝试创建一个具有以下属性的层：
 
-- Call it `crystals`, and make the `id`, `name`, `symbol`, `color`, and `resource` fields match that concept.
-- Place it on the row above `prestige`.
-- Make it unlock if the player has five or more Prestige Points. You can use an `unlock` callback in `setup` for this.
-- Give it a simple reset using Prestige Points as the resource. The formula factors can be the same as `prestige` if you
-  so choose.
-- Give it an `effectDescription` explaining the Crystals' effect. This can be anything, but the hidden example and the
-  rest of the tutorial treat them as a multiplier to Point gain.
+- 叫它 `crystals`，并确保 `id`、`name`、`symbol`、`color` 和 `resource` 字段符合这个概念。
+- 放在 `prestige` 这一行之上。
+- 玩家拥有≥5的声望点数时解锁。你可以在 `setup` 中使用 `unlock` 回调来实现。
+- 使用声望点数作为资源进行简单重置。公式因子可以和 `prestige` 一样，如果你愿意可以保持相同。
+- 提供一个 `effectDescription` 来说明水晶的效果。内容可以随意，但隐藏示例和教程的其他部分都将其视为点数增益的倍数。
 
 <details>
-<summary><b>Click here to view the Crystals layer. Try to make it yourself first!</b></summary>
+<summary><b>点击这里查看水晶层。先尝试自己创建吧！</b></summary>
 
 ```js
 import {defineLayer, format} from "tmt";
@@ -40,50 +37,44 @@ export const crystals = defineLayer({
             exponent: 0.5
         },
 
-        effectDescription: context => `Your Crystals multiply Point gain by ${format(context.layerState.points.add(1))}.`
+        effectDescription: context => `你的水晶将点数增益乘以 ${format(context.layerState.points.add(1))}.`
     })
 });
 ```
 
 </details>
 
-## Include It in the Game
+## 将其加入游戏
 
-Import the new handle in `main.js` and add it to `layers`. We'll also extend `pointGain` to use its multiplier:
+在 `main.js` 中导入新的 handle 并将其添加到 `layers`。我们还会扩展 `pointGain` 以使用它的倍数：
 
 ```js
 pointGain(context) {
     let gain = context.stateOf(prestige).points.add(1);
 
     if (context.hasUpgrade("doubleGain", prestige)) {
-        gain = gain.mul(2);
+    gain = gain.mul(2);
     }
 
     return gain.mul(context.stateOf(crystals).points.add(1));
 }
-,
 ```
 
-At zero crystals, the multiplier is one, so adding this layer doesn't reduce the existing rate. One crystal doubles it,
-two triple it, and so on.
+当水晶为零时，倍数为一，所以添加此层不会降低现有速率。一个水晶会使其翻倍，两个则三倍，以此类推。
 
-The effect description in `crystals.js` displays the multiplier. The calculation in `main.js` is what actually applies
-it.
+`crystals.js` 中的效果描述显示了倍数。但实际上是 `main.js` 中的计算才会应用它。
 
-## What Gets Reset?
+## 哪些内容会被重置？
 
-By default, a layer resets other layers with a lower logical row. Crystals are on row `1`, so a crystal reset resets
-prestige on row `0`. That clears Prestige Points, the Doubler, and the custom Energy. Prestige remains unlocked.
+默认情况下，一个层会重置逻辑行数比它低的其他层。水晶在第 `1` 行，所以重置水晶会重置第 `0` 行的声望。这会清除声望点、翻倍器和自定义能量。但声望依然是解锁状态。
 
-You can choose what survives with `retention` on the layer being reset. We haven't added retention here, so the loss of
-prestige progress is part of the crystal reset's cost. See [defineLayer](01/01) when you're ready to change those rules.
+你可以通过正在被重置的层上的 `retention` 来选择哪些内容可以保留。这里我们还没添加保留，所以声望进度的损失是水晶重置的代价之一。当你准备更改这些规则时，可以查看 [defineLayer](01/01)。
 
-## Try It
+## 试一试
 
-1. Refresh the game and earn at least ten Prestige Points, or whatever amount you chose as the requirement.
-2. Select the new `crystals` node and reset for a crystal.
-3. Return to `prestige`. The upgrade should be unowned again, and energy should have restarted from zero.
-4. Earn Prestige Points again and buy the Doubler. The crystal multiplier will help you rebuild faster.
+1. 刷新游戏，并至少赚取十个声望点，或者你自己设置的要求数量。
+2. 选择新的 `crystals` 节点并重置获得水晶。
+3. 返回 `prestige` 页面。升级应该会恢复未购买状态，能量将从零重新开始。
+4. 再次赚取声望点并购买翻倍器。水晶倍数会帮助你更快地重建进度。
 
-You now have two connected layers with a reason to reset and work back up. Continue to [Finishing Up](00/06) to give the
-game a goal.
+现在你有了两个关联的层，可以重置并重新努力。继续前往 [完成](00/06) 给游戏设定一个目标。

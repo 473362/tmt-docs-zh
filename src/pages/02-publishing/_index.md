@@ -1,37 +1,37 @@
-# Publishing
+# 发布
 
-This page prepares your project for hosting, then walks through publishing it with GitHub Pages. You can, of course, use a different host for your game, but GH Pages is very easy since TMT is already built on Git and hosted on GitHub,
+本页将帮助你为托管准备项目，然后引导你使用 GitHub Pages 发布。当然，你也可以使用其他主机来托管你的游戏，但因为 TMT 已经基于 Git 并托管在 GitHub 上，使用 GH Pages 非常简单。
 
-## Publish with GitHub Pages
+## 使用 GitHub Pages 发布
 
-Since you created a repository from the template, you can use GitHub Pages to host it very easily.
+既然你已经从模板创建了仓库，就可以轻松使用 GitHub Pages 来托管它。
 
-### Enable Pages
+### 启用 Pages
 
-1. Open your game's repository on GitHub. Make sure your most recent changes are pushed.
-2. Go to `Settings`, then `Pages`.
-3. Under `Build and deployment`, make sure `Deploy from a branch` is selected.
-4. Under `Branch`, select `main`.
-5. Press `Save`. GitHub should begin deploying your site to its page!
+1. 在 GitHub 上打开你的游戏仓库，确保你最近的更改已经推送。
+2. 进入 `Settings`，然后选择 `Pages`。
+3. 在 `Build and deployment` 下，确保选择了 `Deploy from a branch`。
+4. 在 `Branch` 下，选择 `main`。
+5. 点击 `Save`。GitHub 应该会开始将你的网站部署到对应页面！
 
-## Check the Published Game
+## 检查已发布的游戏
 
-Open the public address and try the game there before sharing it:
+在分享之前，先在公共地址打开并试玩游戏：
 
-- Check for errors and make sure images and styles load.
-- Start fresh and play through the first few minutes.
-- Save, refresh, and check that progress returns.
-- Export a save and check that importing it works.
-- If this updates an existing release, import a copy of an older save and check its progression and custom state.
+- 检查是否有错误，并确保图片和样式加载正常。
+- 从头开始，体验前几分钟的游戏。
+- 保存、刷新，并检查进度是否保留。
+- 导出存档并检查导入是否正常。
+- 如果这是更新现有版本，导入旧存档副本并检查它的进度和自定义状态。
 
-If something works locally but fails online, start with [Troubleshooting](03).
+如果本地能运行但线上失败，可以先参考 [Troubleshooting](03)。
 
-:::note Saves Belong to the Browser and Domain
-Publishing your project doesn't publish your local save. To continue your test game online, export it locally and import it on the public site.
+:::note 存档属于浏览器和域
+发布你的项目不会发布本地存档。要在在线环境继续测试游戏，请先在本地导出，然后在公共站点导入。
 :::
 
-## Release Updates
+## 发布更新
 
-Update `info.version` to show the new release, and use `saveVersion` with `migrateSave` when existing saved state needs conversion. Changing the displayed version alone doesn't migrate a save.
+更新 `info.version` 以显示新版本，并在现有存档需要转换时使用 `saveVersion` 配合 `migrateSave`。仅更改显示的版本号不会迁移存档。
 
-Keep an exported save from the previous release so you can test the next update against it. See [defineMod](01/00) for a migration example and [Saves and Errors](01/09) for save loading information.
+保留前一版本导出的存档，以便测试下一次更新。查看 [defineMod](01/00) 获取迁移示例，以及 [存档与错误](01/09) 了解存档加载信息。

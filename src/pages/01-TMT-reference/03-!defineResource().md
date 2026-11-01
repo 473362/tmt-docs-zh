@@ -1,54 +1,54 @@
 # defineResource()
 
-`defineResource` connects a custom quantity to the engine's currency operations. The returned handle can be used for upgrade and buyable costs, challenge goals, reset resources, and context resource methods.
+`defineResource` 可以把自定义数量连接到引擎的货币操作中。返回的句柄可以用来处理升级和可购买成本、挑战目标、重置资源，以及上下文资源方法。
 
-A resource doesn't create saved state, it relies on your backing state.
+资源本身不会生成保存状态，它依赖于你的基础状态。
 
-Shared types used on this page:
+本页使用的共享类型：
 
-- `DecimalSource` {type: Decimal | ReadonlyDecimal | number | string}\
-Input accepted by Decimal-valued fields and operations. See [Decimal](01/04) for more information.
-- `Decimal` {type: object}\
-A quantity with custom arithmetic and comparison methods. See [Decimal](01/04) for more information .
-- `LayerHandle` {type: layer identity}\
-Returned by [defineLayer](01/01). Exposes only the layer's `id` and `points` resource, with context used to access its state.
+- `DecimalSource` {type: Decimal | ReadonlyDecimal | 数字 | 字符串}  
+接受 Decimal 类型字段和操作的输入。更多信息请参见 [Decimal](01/04)。
+- `Decimal` {type: 对象}  
+一个带有自定义算术和比较方法的数量。更多信息请参见 [Decimal](01/04)。
+- `LayerHandle` {type: 层身份}  
+由 [defineLayer](01/01) 返回。只暴露该层的 `id` 和 `points` 资源，通过上下文访问其状态。
 
-## Properties
+## 属性
 
-- `name` {type: string} {required}\
-The name of the resource.
-- `owner` {type: LayerHandle} {optional}\
-The layer which owns the resource.
-- `get` {type: DecimalSource} {required} {callback-only}\
-Runs as `get(context)` to read the balance.
-- `set` {type: void} {required} {callback-only}\
-Runs as `set(context, value)` to replace the balance.
+- `name` {type: string} {必填}  
+资源的名称。
+- `owner` {type: LayerHandle} {可选}  
+拥有该资源的层。
+- `get` {type: DecimalSource} {必填} {仅回调}  
+以 `get(context)` 运行以读取余额。
+- `set` {type: void} {必填} {仅回调}  
+以 `set(context, value)` 运行以更改余额。
 
-The resource handle exposes only `name` and its `owner`. Keep and use the original handle.
+资源句柄只会暴露 `name` 和 `owner`。请保留并使用原始句柄。
 
-The owner doesn't choose where values are stored or prevent access while its layer is locked. A getter or setter must use `context.stateOf(handle)` to reach layer state. 
+所有者不能决定值的存储位置，也不能在层被锁定时阻止访问。获取或设置值必须使用 `context.stateOf(handle)` 来访问层状态。
 
-## Built-in Resources
+## 内置资源
 
 ### points {type: DecimalResource}
 
-The main currency resource exported by TMT. Reads and writes `context.player.points`. It has no owner, and its handle name is always `"points"`.
+TMT 导出的主要资源。读写 `context.player.points`。它没有拥有者，句柄名称总是 `"points"`。
 
 ### layer.points {type: DecimalResource}
 
-Each layer handle exposes its currency resource. Its owner is that layer and its name comes from the layer's `resource`. Reads and writes the layer's `points` state.
+每个层的句柄都会暴露它的资源。它的拥有者是该层，名称来自该层的 `resource`。读写该层的 `points` 状态。
 
-Item costs and challenge goals default to the current layer's currency. Normal and static resets select their base currency through `reset.resource`.
+物品花费和挑战目标默认使用当前层的货币。普通和静态重置通过 `reset.resource` 选择它们的基础货币。
 
-## Resource Operations
+## 资源操作
 
-Use `context.getResource(handle)` to read a balance, and a writable context's `setResource`, `addResource`, and `spendResource` methods to change it. See [Reading State and Resources](01/06?s=reading-state-and-resources) and [Changing Resources](01/06?s=changing-resources) for signatures and behavior.
+使用 `context.getResource(handle)` 来读取余额，使用可写上下文的 `setResource`、`addResource` 和 `spendResource` 方法来更改余额。有关签名和行为，请参阅 [读取状态和资源](01/06?s=reading-state-and-resources) 和 [更改资源](01/06?s=changing-resources)。
 
-:::tip Tracking Currency
-Direct resource writes to `layer.points` don't update `best` or `total`. Use `grantLayerPoints` when the gain should count toward those records.
+:::tip 跟踪货币
+直接向 `layer.points` 写入资源不会更新 `best` 或 `total`。当收益应该计入这些记录时，请使用 `grantLayerPoints`。
 :::
 
-## Example
+## 例子
 
 ```js
 const prestige = defineLayer({
@@ -57,12 +57,12 @@ const prestige = defineLayer({
     symbol: "P",
     color: "#22f54c",
     row: 0,
-    resource: "Prestige Points",
+    resource: "声望点数",
     startState: () => ({ energy: new Decimal(0) })
 });
 
 const energy = defineResource({
-    name: "Energy",
+    name: "能量",
     owner: prestige,
     get: context => context.stateOf(prestige).energy,
     set(context, value) {
@@ -70,3 +70,5 @@ const energy = defineResource({
     }
 });
 ```
+
+

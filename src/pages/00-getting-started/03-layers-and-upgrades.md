@@ -1,22 +1,23 @@
-# Layers and Upgrades
 
-The template's prestige layer already works. We'll keep its reset and add an upgrade which doubles main point gain.
+# 层与升级
 
-## The Parts of a Layer
+模板的声望层已经生效了。我们会保留它的重置，并添加一个升级，将主点数加倍。
 
-Open `src/prestige.js`. A layer has three main parts:
+## 层的组成部分
 
-- Its metadata identifies it and sets its name, color, tree symbol, and reset row.
-- `startState` creates the starting values for its saved state.
-- `setup` creates its gameplay content, including resets and upgrades.
+打开`src/prestige.js`。一层主要包含三个部分：
 
-`defineLayer` returns a handle. Exporting it as `prestige` lets `main.js` include it and read its state.
+- 其元数据识别其名称、颜色、树符号和重置行。
+- `startState` 创建其保存状态的起始值。
+- `setup`创建游戏内容，包括重置和升级。
 
-The metadata's `resource` names the layer's currency. The `points` imported from `"tmt"` is the main currency resource. They refer to different things: Prestige Points belong to this layer, while points are the currency it spends to reset.
+`defineLayer` 返回一个句柄。导出为`prestige`后，可以含入`main.js`并读取其状态。
 
-## The Prestige Reset
+元数据的“资源”指定该层的货币。从“tmt”导入的“点数”是主要的货币资源。它们指的是不同的内容：声望点数属于该层，点数则是它用来重置的货币。
 
-The template uses this reset inside `setup`:
+## 声望重置
+
+模板在“设置”中使用了这种重置：
 
 ```js
 reset: {
@@ -27,15 +28,15 @@ reset: {
 }
 ```
 
-These settings divide points by 10, take the square root of that result, and round down to get the gain. That gives one Prestige Point at 10 points, two at 40, and three at 90.
+这些设置将点数 除以10后 平方根 并向下取整 以得到声望点数获取。这样10点数时得1点声望点数，40点数时2声望，90分处3声望。
 
-A prestige reset adds the gain to your existing Prestige Points and clears the resource used for it. This layer is on row `0`, so there are no lower-row layers to reset yet.
+声望重置会将获得的声望点数加到你已有的声望点数上，并清除用于该点数的资源。这一层位于`0`行，所以还没有下行层需要重置。
 
-`setup: define => define({ ... })` creates the layer's content once while the game starts. Put changing calculations inside callbacks in that content, rather than expecting setup itself to run every tick.
+`setup: define => define({ ... })` 在游戏开始时创建一层内容。将变更的计算放入内容的回调中，而不是期望设置本身每一次都运行。
 
-## Add an Upgrade
+## 添加升级
 
-Add this to `prestige`'s `setup`:
+把这点加到`prestige`的`setup`里：
 
 ```js
 upgrades: {     
@@ -47,17 +48,17 @@ upgrades: {
 }
 ```
 
-`doubleGain` is the upgrade's ID. The engine uses it to track ownership, and we'll use it to check whether the upgrade has been purchased.
+`doubleGain`是升级的ID。引擎用它来追踪所有权，我们会用它来检查升级是否被购买。
 
-The upgrade costs one Prestige Point. Upgrade costs use their own layer's currency unless you choose another resource with `currency`. The engine handles affordability, payment, and recording ownership for this ordinary purchase.
+升级费用为1点声望点。升级费用使用其自身层的货币，除非你选择其他带有“货币”的资源。引擎负责处理这种普通购买的可负担性、付款和所有权记录。
 
-The default page layout displays the upgrade automatically. You don't need to build a page just to show it.
+默认页面布局会自动显示升级。你不需要专门建页面来展示升级。
 
-## Make the Upgrade Do Something
+## 让升级生效
 
-The description tells players what the upgrade does, but we still need to implement that effect.
+描述会告诉玩家升级的作用，但我们还是需要实现这个效果。
 
-In `main.js`, replace the existing `pointGain` property with:
+在`main.js`中，将现有的`pointGain`属性替换为：
 
 ```js
 pointGain(context) {
@@ -71,16 +72,18 @@ pointGain(context) {
 }
 ```
 
-`hasUpgrade` checks ownership of `doubleGain` on the prestige layer. We pass the handle because this callback belongs to the mod, rather than to a particular layer.
+`hasUpgrade` 检查 prestige 层上 `doubleGain` 的所有权。我们传递该句号是因为这个回调属于模组，而不是某个特定层。
 
-The calculation starts with the template's Prestige Point bonus, then doubles it when the upgrade is owned.
+计算从模板的声望点加成开始，升级后加成翻倍。
 
-## Try It
+## 试试看
 
-Save both files and refresh. Earn two Prestige Points, then buy the Doubler.
+保存两个文件并刷新。赚取两个声望点数，然后购买倍增器。
 
-Before the purchase, two Prestige Points give three points per second. After spending one, the remaining Prestige Point gives a base rate of two, and the Doubler doubles that to four.
+购买前，两点声望点每秒可获得3点。花费一点后，剩余声望点数基础为2点，倍增者则将此倍增至4点。
 
-Prestiging on this same layer keeps the upgrade. Later, a higher layer's reset will clear it unless we configure retention.
+在同一层的声望可以保留升级。之后，除非我们配置保留，否则更高层的重置会清除它。
 
-For more upgrade fields, see [defineLayer](01/01). Next, we'll add [Custom State and Clickables](00/04).
+[我翻译对了吗？]:#
+
+更多升级字段请参见 [defineLayer]（01/01）。接下来，我们将添加 [自定义状态和可点击对象]（00/04）。

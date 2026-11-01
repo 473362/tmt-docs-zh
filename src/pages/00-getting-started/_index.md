@@ -1,19 +1,19 @@
-# Getting Started
+# 入门指南
 
-Welcome to the Getting Started guide!
+欢迎阅读入门指南！
 
-This guide starts with the current TMT template and turns it into a small game with prestige, an upgrade, a custom resource, and a second layer. You'll make changes in order, with something to try in the browser after each step.
+本指南将从当前的 TMT 模板开始，把它变成一个包含声望、升级、自定义资源和第二层的小型游戏。你将按顺序进行更改，每一步之后都能在浏览器中尝试。
 
-You don't need to know the whole engine before starting. Some familiarity with JavaScript will help, but the TMT-specific parts are explained as you use them.
+开始之前不需要完全了解整个引擎。对 JavaScript 有一定熟悉会有帮助，但 TMT 的特定部分会在你使用时解释。（教你必须的JS）
 
-## Start Here
+## 从这里开始
 
-1. [Creating a Game](00/00) gets the template onto your computer and running in your browser.
-2. [A Brief Template Tour](00/01) shows you which files you'll work with.
-3. [Configuring Your Game](00/02) gives the game its own identity and explains point generation.
-4. [Layers and Upgrades](00/03) explains the template's prestige layer and adds its first upgrade.
-5. [Custom State and Clickables](00/04) adds energy and a button which spends it.
-6. [Adding Another Layer](00/05) adds a new layer and resets the prestige layer.
-7. [Finishing Up](00/06) adds a goal and covers saving, updating, and where to go next.
+1. [创建游戏](00/00) 将模板下载到你的电脑并在浏览器中运行。
+2. [项目导览](00/01) 介绍你将要使用的文件。
+3. [配置游戏](00/02) 给游戏赋予独特身份，并解释点数生成。
+4. [层与升级](00/03) 讲解模板的声望层，并添加第一个升级。
+5. [再值可点](00/04) 添加能量和一个消耗能量的按钮。
+6. [在加一层](00/05) 添加新的一层并重置声望层。
+7. [完成收尾](00/06) 添加目标，讲解保存、更新以及下一步该去哪。
 
-If you already have the template running, start with the [Project Tour](00/01). For the complete list of properties and functions, use [the reference](01).
+如果你已经运行了模板，请从 [项目导览](00/01) 开始。完整的属性和函数列表请参考 [参考文档](01)。

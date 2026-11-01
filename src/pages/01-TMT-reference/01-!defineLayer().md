@@ -1,402 +1,421 @@
 # defineLayer()
 
-defineLayer is how you create a layer, the thing you'll be doing the most work with and creating all your game's content within.
+defineLayer 是你创建层的方式，这是你最常用的东西，你会在里面创建你游戏的所有内容。
 
-Add the returned handle to the `layers` property of [defineMod](01/00).
+将返回的句柄添加到 [defineMod](01/00) 的 `layers` 属性中。
 
-Runtime callbacks within defineLayer() receive a [context](01/06) unless otherwise stated. `startState` and `setup` have their own signatures, described below.
+defineLayer() 内的运行时回调会接收一个 [context](01/06)，除非另有说明。`startState` 和 `setup` 有它们自己的签名，详细说明如下。
 
-The layer definition contains three parts: metadata, `startState`, and `setup`. `setup` is documented in pieces due to its sheer size.
+层定义包含三部分：元数据、`startState` 和 `setup`。因为篇幅较大，`setup` 分成多部分进行文档说明。
 
-Shared types used on this page:
+本页使用的共享类型：
 
-- `StyleValue` {type: Record<string, string | number | undefined>}\
-Maps CSS property names to their values. See [Styling](01/11) for supported values and overrides.
-- `ClassValue` {type: string | string[] | Record<string, boolean>}\
-Applies space-separated class names, a list of class names, or a map of names to whether they're applied. See [Styling](01/11) for examples.
-- `DecimalSource` {type: Decimal | ReadonlyDecimal | number | string}\
-Input accepted by Decimal-valued fields and operations. See [Decimal](01/04) for more information.
-- `ReadonlyDecimal` {type: protected Decimal}\
-Supports Decimal calculations without allowing changes to its representation. See [Decimal](01/04) for more information.
-- `LayerHandle` {type: layer identity}\
-Returned by [defineLayer](01/01). Exposes only the layer's `id` and `points` resource, with context used to access its state.
-- `NodeHandle` {type: node identity}\
-Returned by [defineNode](01/02). Exposes only the standalone tree node's `id`.
-- `DecimalResource` {type: resource identity}\
-Identifies a currency through the exported `points`, a layer's `points`, or [defineResource](01/03). Exposes its `name` and supplied `owner`.
-- `LayerState` {type: object}\
-Actual layer state, combining engine fields with custom fields from `startState`, described below.
-- `FormValue` {type: string | number | boolean | null}\
-Values accepted by form controls. Numbers must be finite. Each Form has its own rules, described below.
-- `DropdownOption` {type: object}\
-One choice with a display label and a saved value. Its fields are listed under Dropdown Form.
-- `DropdownConfiguration` {type: object}\
-Form settings passed to `define.dropdown`, including the label, storage or binding, and change callback. Excludes `type` and `options`, which the helper supplies.
-- `PersistentValue` {type: null | boolean | string | number | Decimal | PersistentValue[] | Record<string, PersistentValue>}\
-Documentation shorthand for values the engine can save.
+- `StyleValue` {type: Record<string, string | number | undefined>}
+将 CSS 属性名称映射到其值。支持的值和覆盖方式请参见 [Styling](01/11)。
+- `ClassValue` {type: string | string[] | Record<string, boolean>}
+可以应用以空格分隔的类名、类名列表，或一个映射表来判断是否应用某个类。示例见 [Styling](01/11)。
+- `DecimalSource` {type: Decimal | ReadonlyDecimal | number | string}
+可用于 Decimal 值字段和操作的输入。详情见 [Decimal](01/04)。
+- `ReadonlyDecimal` {type: protected Decimal}
+支持 Decimal 计算，但不允许修改其表示。详情见 [Decimal](01/04)。
+- `LayerHandle` {type: layer identity}
+由 [defineLayer](01/01) 返回。只暴露层的 `id` 和 `points` 资源，通过 context 可以访问其状态。
+- `NodeHandle` {type: node identity}
+由 [defineNode](01/02) 返回。只暴露独立树节点的 `id`。
+- `DecimalResource` {type: resource identity}
+通过导出的 `points`、层的 `points` 或 [defineResource](01/03) 来识别货币。暴露其 `name` 和提供的 `owner`。
+- `LayerState` {type: object}
+实际的层状态，结合了引擎字段和 `startState` 的自定义字段，详见下文。
+- `FormValue` {type: string | number | boolean | null}
+表单控件接受的值。数字必须是有限值。每个表单有自己的规则，见下文。
+- `DropdownOption` {type: object}
+一个选项，包含显示标签和存储值。其字段列在 Dropdown Form 下。
+- `DropdownConfiguration` {type: object}
+传给 `define.dropdown` 的表单设置，包括标签、存储或绑定，以及变更回调。不包括 `type` 和 `options`，由助手提供。
+- `PersistentValue` {type: null | boolean | string | number | Decimal | PersistentValue[] | Record<string, PersistentValue>}
+文档中用于表示引擎可以保存的值的简写。
 
-## Metadata Properties
+## 元数据属性
 
-Metadata identifies the layer and creates its default appearance.
+元数据用于识别层并创建其默认外观。
 
-- `id` {type: string} {required}\
-Identifies the layer. Must be unique across all layers and standalone nodes in the mod.
-- `name` {type: string} {required}\
-Names this layer.
-- `symbol` {type: string} {required}\
-Determines what letter or symbol this layer shows on its tree node.
-- `color` {type: string} {required}\
-A CSS color used throughout the layer’s styling.
-- `row` {type: number} {required}\
-Determines the layer’s logical row for resets. Must be finite. Also supplies the default tree row. Use `tree.row` to override the visual row or place the layer on the left or right side of the tree.
-- `resource` {type: string} {required}\
-Determines the name of the resource this layer provides. Regardless of this value, a layer's points are always accessible at `context.stateOf(handle).points`.
+- `id` {type: 字符串} {必要}  
+用于标识层。在 mod 中必须在所有层和独立节点中唯一。
+- `name` {type: 字符串} {必要}  
+为该层命名。
+- `symbol` {type: 字符串} {必要}  
+决定该层在其树节点上显示的字母或符号。
+- `color` {type: 字符串} {必要}  
+整个层样式中使用的 CSS 颜色。
+- `row` {type: 数字} {必要}  
+决定层在重置时的逻辑行，必须是有限值。同时提供默认树行。使用 `tree.row` 可以覆盖视觉行或将层放置在树的左侧或右侧。
+- `resource` {type: 字符串} {必要}  
+决定层提供的资源名称。无论此值为何层的 点数总是可以通过 `context.stateOf(handle).points` 访问。
 
-## startState {type: plain object} {optional} {callback-only}
 
-Runs as `startState()` to initialize custom persistent state and engine state fields. Values must match PersistentValue. Other layers can access this state through `context.stateOf(handle).property`.
 
-The following fields control the layer’s initial availability:
+## startState {type: plain object} {可选} {callback-only}
 
-- `unlocked` {type: boolean} {optional}\
-Controls whether the layer can be selected. Defaults to `true` for the layer selected by `defineMod`’s `info.startLayer` and `false` for other layers. Update, automation, and passive generation still run while the layer is locked.
-- `deactivated` {type: boolean} {optional}\
-Defaults to `false`. Deactivated layers cannot be selected, do not run update, automation, or passive generation, and suppress ownership, effects, and source-initiated resets. Incoming resets can still effect them. Change this state from another layer or the mod's update callback to reactivate it.
+以`startState()`运行，用于初始化自定义持久状态和引擎状态字段。值必须与PersistentValue匹配。其他层可以通过`context.stateOf(handle).property`访问该状态。
 
-Other initial state fields are:
+以下字段控制该层的初始可用性：
 
-- `points` {type: DecimalSource} {optional}\
-Initial layer currency. Must be finite. Defaults to `0`.
-- `best` {type: DecimalSource} {optional}\
-Highest recorded currency. Must be finite. Defaults to the initial `points` value.
-- `total` {type: DecimalSource} {optional}\
-Total recorded currency gained. Must be finite. Defaults to the initial `points` value.
-- `resetTime` {type: number} {optional}\
-Elapsed seconds since the layer’s reset. Must be finite and nonnegative. Defaults to `0`.
-- `forceTooltip` {type: boolean} {optional}\
-Keeps supported layer and item tooltips visible. Defaults to `false`. Shift-clicking a layer’s tree node changes it.
-- `upgrades` {type: Record<string, true>} {optional}\
-Initially purchased upgrades, keyed by ID. Other upgrades are omitted.
-- `buyables` {type: Record<string, DecimalSource>} {optional}\
-Starting amounts by buyable ID. Values must be finite and nonnegative. Other buyables start at their `initialAmount`.
-- `clickables` {type: Record<string, PersistentValue>} {optional}\
-Starting values by clickable ID. Other clickables use their `initialValue`.
-- `challenges` {type: Record<string, number>} {optional}\
-Starting completions by challenge ID. Counts must be nonnegative integers. Other challenge completions start at `0`.
-- `activeChallenge` {type: string | null} {optional}\
-Initially active challenge ID. Defaults to `null`.
-- `milestones` {type: Record<string, true>} {optional}\
-Initially earned milestone IDs. Defaults to nothing. Initialization here does not trigger completion hooks.
-- `achievements` {type: Record<string, true>} {optional}\
-Initially earned achievement IDs. Defaults to nothing. Initialization here does not trigger completion hooks.
-- `grid` {type: Record<string, PersistentValue>} {optional}\
-Stored cell payloads under `"row:column"` keys. Defaults to nothing. Keys must be valid for the layer’s grid.
-- `infoboxes` {type: Record<string, boolean>} {optional}\
-Starting collapse states by infobox ID. Other infoboxes use their `collapsed` setting.
-- `inputs` {type: Record<string, FormValue>} {optional}\
-Starting values for forms using engine-owned storage. Other forms use `defaultValue`. Bound forms have no entry here.
+- `unlocked` {type:布尔值} {可选}
+控制该层是否能被选择。默认由`defineMod`的`info.startLayer`选择的层为`true`，其他层为`false`。在层锁定时，更新、自动化和被动生成仍然会运行。
+- `deactivated` {type:布尔值} {可选}
+默认为`false`。无法选择已停用的层，不能运行更新、自动化或被动生成，并抑制所有权、效果和源代码发起的重置。但来的重置仍然会影响它们。将该状态从其他层更改，或通过模组的更新回调来重新激活。
 
-During a writable callback, these fields can be changed through `context.stateOf(handle)`. 
+其他初始状态字段包括：
 
-`startState` runs whenever new layer state is created, including initialization, loading defaults, incoming resets, and resets that reset their source. Ordinary prestige keeps its source state.
+- `points` {type:DecimalSource} {可选}
+初始层货币。必须是有限的。默认为`0`。
+- `best` {type: DecimalSource} {可选}
+最高记录货币。必须是有限的。默认初始`点数`值。
+- `total` {type: DecimalSource} {可选}
+总计记录货币获得。必须是有限的。默认初始`点数`值。
+- `resetTime` {type: 数字} {可选}
+自层重置以来的几秒钟。必须是有限且非负的。默认为`0`。
+- `forceTooltip` {type: boolean} {可选}
+保持支持的层和物品工具提示可见。默认为`false`。点击层的树节点Shift会改变它。
+- `upgrades` {type: Record<string， true>} {可选}
+最初购买的升级，按ID绑定。其他升级被省略。
+- `buyable` {type:Record<string， DecimalSource>} {可选}
+起始金额按可购买ID划分。价值必须是有限且非负的。其他可购买物品从其`初始金额`开始。
+- `clickables` {type:Record<字符串，持久值>} {可选}
+起始值按可点击ID表示。其他可点击节点使用其`初始值`。
+- `challenges` {type:Record<字符串，编号>} {可选}
+通过挑战ID开始完成。计数必须是非负整数。其他挑战完成从`0`开始。
+- `activeChallenge` {type: 字符串 | null} {可选}
+初始挑战ID。默认为`null`。
+- `milestones` {type:Record<string， true>} {可选}
+初始获得里程碑ID。默认为无。这里的初始化不会触发完成钩子。
+- `achievements` {type: Record<string， true>} {可选}
+初始获得成就ID。默认为零。这里的初始化不会触发完成钩子。
+- `grid` {type:Record<字符串，PersistentValue>} {可选}
+存储单元有效载荷的`行：列`键。默认为无。键必须对该层的网格有效。
+- `infoboxes` {type:Record<字符串，布尔值>} {可选}
+通过信息框ID开始折叠状态。其他信息框使用他们的`折叠`设置。
+- `inputs` {type:Record<string， FormValue>} {可选}
+使用引擎自有存储的表单起始值。其他表单使用`defaultValue`。绑定表单此处没有条目。
 
-startState can be used for things like:
+在可写回调过程中，这些字段可以通过`context.stateOf(handle)`进行更改。
 
-- Making an upgrade start as purchased
+每当创建新层状态时，`startState`都会运行，包括初始化、加载默认值、接收的重置以及重置源的重置。普通的Prestige保持其源状态。
+
+startState 可用于以下情况：
+
+- 按购买方式进行升级启动
 ```js
 startState: () => ({
     upgrades: { startWithThisUpgrade: true }
 }),
 ```
 
-- Creating an additional resource within a layer
+- 在层内创建额外资源
 ```js
 startState: () => ({
     additionalCurrency: new Decimal(96)
 }),
 ```
 
-## setup: introduction and visual properties {type: void} {optional} {callback-only}
+## 设置：简介和视觉属性 {type:void} {可选} {仅回调}
 
-Defines the layer’s gameplay content by calling `define` exactly once. The usual form is:
+通过调用 `define` 一次来定义层的游戏内容。通常形式如下：
 ```js
-setup: define => define({ /* properties go here */ })
+setup: define => define({ /* 属性写在这里 */ })
 ```
-The setup property accepts a multitude of properties, far more than you'll find anywhere else in TMT.
+setup 属性接受很多属性，比你在 TMT 其他地方能找到的都多。
 
-The following are `setup` properties relating to how a layer is displayed and behaves on the tree.
+以下是一些与层在树上显示和行为相关的 `setup` 属性。
 
-### unlock {type: boolean} {optional} {callback}
+### unlock {type:boolean} {可选} {回调}
 
-Sets `unlocked` to `true` when it evaluates to `true`. Once a layer is unlocked it does not automatically re-lock. Defaults to nothing.
+当其计算结果为 `true` 时，将 `unlocked` 设为 true。一旦层被解锁，它不会自动重新锁定。默认为空。
 
-### effect and effectDescription
+### effect 和 effectDescription
 
-- `effect` {type: any} {optional} {callback-only}\
-Computes the effect accessed through `context.getLayerEffect(handle)`.
-- `effectDescription` {type: string} {optional} {callback} {html}\
-Displayed beneath the layer’s main reset information.
+- `effect` {type:any} {可选} {仅回调}
+计算通过 `context.getLayerEffect(handle)` 访问的效果。
+- `effectDescription` {type:string} {可选} {回调} {html}
+显示在层主要重置信息下。
 
-### showBest and showTotal
+### showBest 和 showTotal
 
-- `showBest` {type: boolean} {optional} {callback}\
-Controls whether a layer's highest currency ever reached is displayed. Defaults to true.
-- `showTotal` {type: boolean} {optional} {callback}\
-Controls whether a layer's total currency gained is displayed. Defaults to true.
+- `showBest` {type:boolean} {可选} {回调}
+控制是否显示层达到的最高货币。默认为 true。
+- `showTotal` {type:boolean} {可选} {回调}
+控制是否显示层获得的总货币。默认为 true。
 
-### tree {type: object} {optional}
+### tree {type: 对象} {可选}
 
-Controls the layer’s appearance on the tree through the following properties:
+通过以下属性控制该层在树上的显示效果：
 
-- `row` {type: number | "left" | "right"} {optional}\
-Overrides the visual tree row. Defaults to the layer’s metadata `row`. `"left"` and `"right"` place the node on the corresponding side of the tree.
-- `shown` {type: boolean | "ghost"} {optional} {callback}\
-Controls whether the layer appears on the tree. `"ghost"` takes up space without showing a node. Defaults to the layer’s `unlocked` state.
-- `position` {type: number} {optional}\
-Controls the layer’s position within its visual row. Must be finite. Defaults to its index in the `layers` property of `defineMod`.
-- `connections` {type: (LayerHandle | NodeHandle | TreeConnection)[]} {optional}\
-Visual connections to other layers or nodes in the mod. Numeric-row layers default to connections with visible layers in the preceding displayed numeric row. Side-row layers default to no connections. `[]` disables connections. These connections do not control resets. Customize a connection through these fields:
-  - `target` {type: LayerHandle | NodeHandle} {required}\
-  The destination layer or node.
-  - `color` {type: string} {optional}\
-  The connection’s color. Defaults to `"#ffffff"`.
-  - `width` {type: number} {optional}\
-  The connection’s width. Must be finite and positive. Defaults to `15`.
-- `tooltip` {type: string} {optional} {callback} {html}\
-Controls the tree-node tooltip, including for a locked node if it is shown. Defaults to `{currency} {currency name}` when unlocked and `""` when locked.
-- `mark` {type: boolean | string} {optional} {callback}\
-Shows a star when `true`, a custom image when given a URL, or no marker when `false`. Defaults to `false`.
-- `image` {type: string} {optional} {callback}\
-A URL controlling the image displayed on the layer’s tree button. Defaults to no image, instead displaying the layer's symbol.
-- `actionGlowColor` {type: string} {optional} {callback}\
-A CSS color for actionable item notifications. Defaults to `"red"`.
-- `resetGlowColor` {type: string} {optional} {callback}\
-A CSS color for reset notifications. Defaults to `"white"`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the tree button. Its properties override matching values from `ui.componentStyles["tree-node"]`. Defaults to no additional styles.
-- `class` {type: ClassValue} {optional} {callback}\
-Applies CSS classes to the tree button. Defaults to no additional classes.
+- `row` {type: 数字 | "left" | "right"} {可选}  
+覆盖视觉树的行。默认为该层元数据中的 `row`。`"left"` 和 `"right"` 将节点放在树的对应侧。
+- `shown` {type: 布尔 | "ghost"} {可选} {回调}  
+控制该层是否显示在树上。`"ghost"` 会占据空间但不显示节点。默认值为该层的 `unlocked` 状态。
+- `position` {type: 数字} {可选}  
+控制该层在视觉行中的位置。必须为有限数。默认为其在 `defineMod` 的 `layers` 属性中的索引。
+- `connections` {type: (LayerHandle | NodeHandle | TreeConnection)[]} {可选}  
+与模组中其他层或节点的视觉连接。数字行层默认与前一个显示的数字行中可见层相连。侧行层默认没有连接。`[]` 可禁用连接。这些连接不会控制重置。可通过以下字段自定义连接：
+  - `target` {type: LayerHandle | NodeHandle} {必要}  
+  目标层或节点。
+  - `color` {type: 字符串} {可选}  
+  连接颜色。默认值为 `"#ffffff"`。
+  - `width` {type: 数字} {可选}  
+  连接宽度。必须为有限正数。默认值为 `15`。
+- `tooltip` {type: 字符串} {可选} {回调} {html}  
+控制树节点提示，包括显示锁定节点时的提示。未解锁时默认 `{currency} {currency name}`，锁定时为 `""`。
+- `mark` {type: 布尔 | 字符串} {可选} {回调}  
+为 `true` 时显示星标，提供 URL 时显示自定义图片，`false` 则不显示标记。默认值为 `false`。
+- `image` {type: 字符串} {可选} {回调}  
+控制层的树按钮上显示的图片 URL。默认不显示图片，而显示层的符号。
+- `actionGlowColor` {type: 字符串} {可选} {回调}  
+可操作项通知的 CSS 颜色。默认值为 `"white"`。
+- `resetGlowColor` {type: 字符串} {可选} {回调}  
+重置通知的 CSS 颜色。默认值为 `"red"`。
+- `style` {type: StyleValue} {可选} {回调}  
+为树按钮设置样式。属性会覆盖 `ui.componentStyles["tree-node"]` 中的对应值。默认无额外样式。
+- `class` {type: ClassValue} {可选} {回调}  
+为树按钮应用 CSS 类。默认无额外类。
 
-### shouldNotify and resetNotify
+### shouldNotify 和 resetNotify
 
-- `shouldNotify` {type: boolean} {optional} {callback: boolean | undefined}\
-Overrides the layer’s actionable item notification check. Returning `undefined` uses the built-in check, which is also the default behavior.
-- `resetNotify` {type: boolean} {optional} {callback: boolean | undefined}\
-Overrides the layer’s reset notification check. Returning `undefined` uses the built-in check, which is also the default behavior.
+- `shouldNotify` {type: boolean} {可选} {回调: boolean | undefined}  
+覆盖层的可操作项目通知检查。返回 `undefined` 将使用内置检查，这也是默认行为。
+- `resetNotify` {type: boolean} {可选} {回调: boolean | undefined}  
+覆盖层的重置通知检查。返回 `undefined` 将使用内置检查，这也是默认行为。
 
-Automatic action notifications check affordable upgrades and buyables, eligible clickable and grid actions, and completion of the active challenge. Automatic reset notifications use reset availability. Action glow takes priority over reset glow.
+自动操作通知会检查可负担的升级和可购买项目、可点击和网格操作，以及当前活跃挑战的完成情况。自动重置通知使用重置可用性。操作高亮优先于重置高亮。
 
-## setup: reset and retention
+## 设置：重置和保留
 
-The following are `setup` properties relating to how a layer's reset works.
+以下是与层重置方式相关的 `setup` 属性。
 
-### reset {type: object} {optional}
+### reset {type: 对象} {可选}
 
-Controls how the layer’s reset functions. Defaults to `{ type: "none" }`.
+控制该层的重置功能。默认值是 `{ type: "none" }`。
 
-It accepts the following properties for determining how it functions:
+它接受以下属性来决定它的功能：
 
-- `type` {type: "normal" | "static" | "custom" | "none"} {required}\
-A normal reset calculates layer currency gain based on a given currency. A static reset calculates layer currency gain based on a given currency, but scales the cost of the layer currency based on your current amount of it. A custom reset has no built-in cost or affordability behavior and is controlled through callbacks. A none reset disables reset behavior but still allows forced and challenge resets.
-- `targets` {type: object} {optional}\
-Controls which other layers are reset when a layer is reset. Defaults to resetting layers with a lower metadata `row`. `targets` is configured through three properties:
-  - `include` {type: LayerHandle[]} {optional}\
-  Adds layers to the default target set or the explicit `only` set.
-  - `exclude` {type: LayerHandle[]} {optional}\
-  Removes layers from the final target set, including layers listed in `include`.
-  - `only` {type: LayerHandle[]} {optional}\
-  Replaces the default row-based target set with this list. `include` and `exclude` are applied afterward.
+- `type` {type: "normal" | "static" | "custom" | "none"} {必要}  
+普通重置根据给定货币计算层货币增益。静态重置根据给定货币计算层货币增益，但会根据你当前的货币量调整层货币的成本。自定义重置没有内置的成本或可负担性行为，而是通过回调控制。无重置会禁用重置行为，但仍允许强制和挑战重置。
+- `targets` {type: 对象} {可选}  
+控制当某层被重置时，会重置哪些其他层。默认会重置元数据 `row` 较低的层。`targets` 通过三个属性配置：
+- `include` {type: LayerHandle[]} {可选}  
+将层添加到默认目标集合或者显式的 `only` 集合。
+- `exclude` {type: LayerHandle[]} {可选}  
+从最终目标集合中移除层，包括 `include` 中列出的层。
+- `only` {type: LayerHandle[]} {可选}  
+使用此列表替代默认基于行的目标集合。之后会应用 `include` 和 `exclude`。
 
-Normal and static resets accept `resource`, `requires`, and the shared formula factors below. Softcap fields are only accepted for normal resets. `base` and `canMax` are only accepted for static resets. Custom resets accept `gain`, `canReset`, and `nextRequirement` instead of formula fields. A `"none"` reset accepts only `type` and `targets`.
+普通和静态重置接受 `resource`、`requires` 以及下面共享的公式因子。软上限字段只适用于普通重置。`base` 和 `canMax` 只适用于静态重置。自定义重置接受 `gain`、`canReset` 和 `nextRequirement`，而不是公式字段。`"none"` 重置只接受 `type` 和 `targets`。
 
-- `resource` {type: DecimalResource} {required when: reset.type is "normal" or "static"}\
-Controls what resource is used in reset gain calculation.
-- `requires` {type: DecimalSource} {required when: reset.type is "normal" or "static"} {callback}\
-Controls the base requirement for the first layer currency to be gained by a reset.
-- `exponent` {type: DecimalSource} {optional} {callback}\
-In a normal reset, it is applied to layer currency gain immediately after the division of resource by requires. In a static reset, it is applied to the effective layer currency amount. Defaults to 1.
-- `gainMultiplier` {type: DecimalSource} {optional} {callback}\
-In a normal reset, it is applied to layer currency gain immediately after the application of exponent. In a static reset, it multiplies the resource requirement, **serving as a way to make resets more costly rather than a gain multiplier.** Defaults to 1.
-- `gainExponent` {type: DecimalSource} {optional} {callback}\
-In a normal reset, it is applied to layer currency gain immediately after the application of gainMultiplier. In a static reset, it divides the cost exponent. Defaults to 1.
-- `softcapStart` {type: DecimalSource} {required when: softcapPower is specified} {callback}\
-Used only in normal resets. Applies a softcap above this amount, using `softcapPower` as its strength. Defaults to no softcap.
-- `softcapPower` {type: DecimalSource} {optional} {callback}\
-Used only in normal resets. Controls the strength of a layer's currency softcap. Defaults to `0.5` for an active softcap.
-- `finalMultiplier` {type: DecimalSource} {optional} {callback}\
-In a normal reset, it is applied to layer currency gain immediately after the application of a softcap if one is defined, and after the application of gainExponent if one is not. In a static reset, it divides the layer currency amount before exponent is applied. Defaults to 1.
-- `base` {type: DecimalSource} {required when: reset.type is "static"} {callback}\
-Used only in static resets. The exponential cost base, must be finite and greater than `1`.
-- `canMax` {type: boolean} {optional} {callback}\
-Used only in static resets. If true, a static reset can gain more than one point at a time. Effectively enabling a "buy-max" for static resets. Defaults to false.
-- `gain` {type: DecimalSource} {required when: reset.type is "custom"} {callback-only}\
-Returns the reset gain. Overrides the formula for normal and static resets and supplies the gain for custom resets. Must return a finite, nonnegative value.
-- `canReset` {type: boolean} {required when: reset.type is "custom"} {callback-only}\
-Available only for custom resets. Determines whether a reset can be triggered.
-- `nextRequirement` {type: DecimalSource} {required when: reset.type is "custom"} {callback-only}\
-Returns the displayed next requirement for a custom reset, or overrides its calculation for a normal or static reset. A static reset also uses this value for affordability. Must return a finite, positive value.
+- `resource` {type: DecimalResource} {当：reset.type 是`normal`或`static`时需要}
+控制复位增益计算中使用的资源。
+- `requires` {type: DecimalSource} {必要时：reset.type 是`normal`还是`static`} {callback}
+控制重置获得第一层货币的基础要求。
+- `exponent` {type: DecimalSource} {可选} {callback}
+在普通重置中，它被应用到资源分配后立即获得的层货币。在静态重置中，它被应用到有效层的货币数量上。默认为1。
+- `gainMultiplier` {type: DecimalSource} {可选} {callback}
+在正常重置中，指数应用后立即应用于层货币增益。静态重置则是资源需求乘以增加，**作为一种使重置成本提高而非增益倍数的方式。** 默认为1。
+- `gainExponent` {type: DecimalSource} {可选} {callback}
+在正常重置中，它在应用gainMultiplier后立即应用于货币收益层。在静态重置中，它除以成本指数。默认为1。
+- `softcapStart` {type: DecimalSource} {指定时需要 softcapPower } {callback}
+仅用于普通重置。在超过此数值时施加软上限，使用`softcapPower`作为其强度。默认为无软上限。
+- `softcapPower` {type: DecimalSource} {可选} {callback}
+仅用于普通重置。控制层币软上限的强度。激活软上限默认为`0.5`。
+- `finalMultiplier` {type: DecimalSource} {可选} {callback}
+在正常重置中，如果定义了软上限，则在应用后立即应用到层级货币收益;如果未定义，则在应用gainExponent后再加以指数。在静态重置中，指数应用前会除以层级货币金额。默认为1。
+- `base` {type: DecimalSource} {需要时：reset.type is `static`} {callback}
+仅用于静态重置。指数成本基必须有限且大于`1`。
+- `canMax` {type: boolean} {可选} {callback}
+仅用于静态重置。如果为真，静态重置一次可以获得多个点数。实际上是为静态重置启用了`购买上限`。默认为false。
+- `gain` {type: DecimalSource} {当 reset.type 是`custom`时需要} {仅回调}
+返回复位增益。覆盖正常和静态复位的公式，并为自定义复位提供增益。必须返回有限且非负的值。
+- `canReset` {type: boolean} {required when： reset.type is `custom`} {仅回调}
+仅可用于自定义重置。决定是否能触发重置。
+- `nextRequirement` {type: DecimalSource} {required when： reset.type is `custom`} {仅回调}
+返回显示的下一个自定义重置需求，或覆盖其对正常或静态重置的计算。静态重置也使用该值以保证可负担性。必须返回一个有限的正值。
 
-Without a `gain` override, a normal reset grants zero below `requires`. Otherwise, its final gain is determined by the following:
+
+没有 `gain` 覆盖时，普通重置在低于 `requires` 时会获得零增益。否则，其最终增益由以下公式决定：
 ```text
 1. base = (((resource / requires)^exponent) * gainMultiplier)^gainExponent
-2. If a softcap is defined and base > softcapStart:
+2. 如果定义了软上限且 base > softcapStart：
    base = base^softcapPower * softcapStart^(1 - softcapPower)
 3. gain = max(0, floor(base * finalMultiplier))
 ```
 
-The built-in normal `nextRequirement` reverses this calculation to find the next gain requirement:
+内置的普通 `nextRequirement` 反解此计算以找到下一个增益需求：
 ```text
 1. requirement = (gain + 1) / finalMultiplier
-2. If a softcap is defined and requirement > softcapStart:
+2. 如果定义了软上限且 requirement > softcapStart：
    requirement = (requirement / softcapStart^(1 - softcapPower))^(1 / softcapPower)
 3. nextRequirement = max(requires, requires * ((requirement^(1 / gainExponent) / gainMultiplier)^(1 / exponent)))
 ```
 
-This requirement is not rounded. A `gain` override changes the starting gain used by this inverse, a `nextRequirement` override replaces the inverse itself.
+此需求不会被四舍五入。`gain` 覆盖会更改此反解使用的初始增益，`nextRequirement` 覆盖会直接替换反解本身。
 
-Without `gain` or `nextRequirement` overrides, static reset calculations use the following:
+没有 `gain` 或 `nextRequirement` 覆盖时，静态重置的计算如下：
 ```text
 1. nextRequirement = max(requires, requires * gainMultiplier * base^(((layerCurrency / finalMultiplier)^exponent) / gainExponent))
-If `canMax` is false or resource < requires, the gain is one. Otherwise:
+如果 `canMax` 为 false 或 resource < requires，增益为 1。否则：
 2. total = floor((log_base(max(1, resource / requires / gainMultiplier)) * gainExponent)^(1 / exponent) * finalMultiplier)
-3. gain = max(1, total - layerCurrency + 1)
+3. gain = max(1, total - layerCurrency   1)
 ```
 
-Normal resets require positive calculated gain, static resets require the resource to be greater than or equal to its nextRequirement, custom resets require canReset to return true.
+普通重置需要正的计算增益，静态重置要求资源大于或等于其下一个需求，自定义重置要求 canReset 返回 true。
 
-### retention {type: boolean | RetentionSelection} {optional} {callback}
 
-Controls which state is retained during an incoming reset or forced self-reset. `true` retains the entire previous state. `false` uses fresh state from `startState` and engine defaults. Availability flags `unlocked`, `deactivated`, and `forceTooltip` always survive resets. Defaults to `false`.
 
-Retention accepts the following fields:
+### 保留 {type: boolean | RetentionSelection} {可选} {回调函数}
 
-- `points` {type: boolean} {optional}\
-Keeps the previous layer currency balance when `true`.
-- `best` {type: boolean} {optional}\
-Keeps the previous highest layer currency record when `true`.
-- `total` {type: boolean} {optional}\
-Keeps the previous total layer currency record when `true`.
-- `resetTime` {type: boolean} {optional}\
-Keeps the previous elapsed reset time when `true`. A source reset still clears its timer at the end of the reset.
-- `activeChallenge` {type: boolean} {optional}\
-Keeps the previous active challenge when `true`.
-- `upgrades`, `milestones`, `achievements`, `challenges`, `buyables`, `clickables`, `grid`, `infoboxes`, and `inputs` {type: boolean | string[]} {optional}\
-Retains specified state entries. List the IDs to retain, use `true` to retain all entries, or `false` to retain none. Form values use `inputs`. Grid selections use cell keys.
-- `custom` {type: boolean | string[]} {optional}\
-Retains custom state. List the state IDs to retain, use `true` to retain all custom state, or `false` to retain none.
+控制在接收到重置或强制自我重置时，哪些状态会被保留。`true` 表示保留整个之前的状态。`false` 表示使用 `startState` 和引擎默认的全新状态。可用标志 `unlocked`、`deactivated` 和 `forceTooltip` 总会在重置后保留。默认值为 `false`。
 
-For example:
+保留选项接受以下字段：
+
+- `points` {type: boolean} {可选}  
+当为 `true` 时，保留之前的层级货币余额。
+- `best` {type: boolean} {可选}  
+当为 `true` 时，保留之前的最高层级货币记录。
+- `total` {type: boolean} {可选}  
+当为 `true` 时，保留之前的总层级货币记录。
+- `resetTime` {type: boolean} {可选}  
+当为 `true` 时，保留之前经过的重置时间。源重置仍会在重置结束时清除其计时器。
+- `activeChallenge` {type: boolean} {可选}  
+当为 `true` 时，保留之前的活跃挑战。
+- `upgrades`、`milestones`、`achievements`、`challenges`、`buyables`、`clickables`、`grid`、`infoboxes` 和 `inputs` {type: boolean | string[]} {可选}  
+保留指定的状态条目。列出要保留的 ID，使用 `true` 可保留所有条目，使用 `false` 则不保留任何条目。表单值使用 `inputs`，网格选择使用单元格键。
+- `custom` {type: boolean | string[]} {可选}  
+保留自定义状态。列出要保留的状态 ID，使用 `true` 可保留所有自定义状态，使用 `false` 则不保留任何状态。
+
+
+例如：
 ```js
 retention: context => ({
-    best: true, // Keep best points on reset.
-    milestones: true, // Keep all milestones on reset.
-    upgrades: ["keepThisUpgrade"], // Keep an upgrade of ID "keepThisUpgrade" on reset
-    custom: ["secondaryCurrency"], // Keep a custom state of ID "secondaryCurrency" on reset
-    points: context.source === superPrestige // If the incoming reset is from a layer of the handle superPrestige, keep points on reset
+  best: true, // 在重置时保留最佳点数。
+  milestones: true, // 在重置时保留所有里程碑。
+  upgrades: ["keepThisUpgrade"], // 在重置时保留ID为 "keepThisUpgrade" 的升级
+  custom: ["secondaryCurrency"], // 在重置时保留ID为 "secondaryCurrency" 的自定义状态
+  points: context.source === superPrestige // 如果本次重置来自 superPrestige 层，则在重置时保留点数
 })
 ```
 
-### onReset {type: void} {optional} {callback-only}
 
-Runs as `onReset(context)` for the source of a reset and for each incoming target after its state is reset. The context’s `layerState` belongs to that target. See [Reset Contexts](01/06?s=reset-contexts) for the reset metadata available here and while evaluating `retention`.
 
-An ordinary prestige grants source currency, updates best and total, runs the source hook, awards milestones and achievements, resets targets in lower rows, resets the base resource, and resets the source’s timer. The source itself is not reset.
 
-`context.forceReset({})` grants no currency and defaults to preserving source state. `context.forceReset({ resetSource: true })` resets the source after incoming targets and then calls its hook. Challenge entry and exit grant no currency.
 
-## setup: the ui property {type: object} {optional}
 
-`ui` is extremely powerful, letting you configure a layer's appearance with deep precision. Includes basic section placement, three kinds of layer embedding, custom styles for any component or component class, nestable tabs, nestable columns and rows, and more. By far the most complex `setup` property.
 
-It accepts the following properties, plus the reset text fields described below:
+### onReset {type: void} {可选} {仅回调}
 
-- `page` {type: LayoutNode[]} {optional}\
-Defines the layer’s layout. Defaults to the standard layer layout.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the layer page.
-- `componentStyles` {type: object} {optional}\
-Configures styles by component name:
-  - `[componentName]` {type: StyleValue} {optional} {callback}\
-  Styles the named component. For example, `"tree-node"` supplies shared tree-button styles.
+运行方式为 `onReset(context)`，适用于重置的来源以及每个在状态重置后的目标。context 的 `layerState` 属于该目标。有关这里可用的重置元数据以及在评估 `retention` 时的使用，请参见 [重置上下文](01/06?s=reset-contexts)。
 
-### resetDescription and resetButtonText
+普通声望会授予源货币，更新最佳和总计，运行源钩子，重置下排目标，重置基础资源，并重置源的计时器。源本身不会被重置。
 
-- `resetDescription` {type: string} {optional} {callback} {html}\
-Text displayed immediately before the calculated gain on the reset button. Defaults to `"Reset for "`.
-- `resetButtonText` {type: string} {optional} {callback} {html}\
-Completely replaces a layer's reset button's text with itself.
+`context.forceReset({})` 不会授予货币，并默认保留源状态。`context.forceReset({ resetSource: true })` 会在处理完进入的目标后重置源，然后调用它的钩子。挑战的进入和退出也会重置它们的源，同时保留该源的挑战完成记录。
 
-### Page layout
 
-`ui.page` arranges built-in layout nodes. Its default order is infoboxes, main reset information, milestones, upgrades, buyables, clickables, challenges, achievements, grid, bars, and forms. `[]` displays no content.
 
-Every layout node accepts these fields:
 
-- `type` {type: "section" | "text" | "image" | "spacer" | "toggle" | "row" | "column" | "tabs" | "embed"} {required}\
-Selects the node’s behavior and fields. Types elaborated on below.
-- `shown` {type: boolean} {optional} {callback}\
-Controls whether the node and its contents render. Defaults to `true`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the node.
-- `class` {type: ClassValue} {optional} {callback}\
-Applies classes to the node.
+## 设置：ui 属性 {type: object} {可选}
 
-#### Sections
+`ui` 非常强大，可以让你以深度精确的方式配置层的外观。包括基本的区块布局、三种层嵌入方式、为任意组件或组件类定制样式、可嵌套的标签页、可嵌套的列和行等等。到目前为止，是最复杂的 `setup` 属性。
 
-Use `type: "section"` to render a built-in feature collection:
+它接受以下属性，以及下面描述的重置文本字段：
 
-- `feature` {type: "main" | "upgrades" | "buyables" | "clickables" | "challenges" | "milestones" | "achievements" | "grid" | "bars" | "infoboxes" | "forms"} {required}\
-Selects the content to be displayed. `"main"` displays currency, reset controls, best/total, passive rate, and the layer effect description.
-- `title` {type: string} {optional} {callback} {html}\
-Heading above the section. Overrides an automatically generated heading. `""` suppresses the visible heading.
-- `layout` {type: "default" | "tree"} {optional}\
-Defaults to `"default"`. Tree layout arranges upgrades, buyables, or clickables into their own trees.
-- `ids` {type: string[]} {optional}\
-Displayed item IDs and order for a default collection section. Defaults to all items. `[]` displays none. Not used with `main`, `grid`, or tree layout.
-- `rows` {type: string[][]} {required when: layout is "tree"}\
-Item IDs arranged into rows for tree layout. Empty rows take up space. Cannot be combined with `ids` or default layout.
+- `page` {type: LayoutNode[]} {可选}  
+定义层的布局。默认为标准层布局。
+- `style` {type: StyleValue} {可选} {回调}  
+为层页面设置样式。
+- `componentStyles` {type: object} {可选}  
+按组件名称配置样式：
+- `[componentName]` {type: StyleValue} {可选} {回调}  
+为指定组件设置样式。例如，`"tree-node"` 提供共享的树按钮样式。
 
-Item branches draw between visible endpoints in the same tree section. They do not create purchase prerequisites. The same item can appear in multiple sections.
 
-#### Text, images, and spacers
 
-For `type: "text"`:
+### 页面布局
 
-- `text` {type: string} {required} {callback} {html}\
-Content displayed by the node.
+`ui.page` 用于排列内置的布局节点。默认顺序是信息框、主要重置信息、里程碑、升级、可购买项、可点击项、挑战、成就、网格、进度条以及表单。`[]` 表示不显示内容。
 
-For `type: "image"`:
+每个布局节点接受以下字段：
 
-- `src` {type: string} {required} {callback}\
-Image URL.
-- `alt` {type: string} {optional} {callback}\
-Alternative text for the image. Defaults to `""`.
+- `type` {type: "section" | "text" | "image" | "spacer" | "toggle" | "row" | "column" | "tabs" | "embed"} {required}  
+决定节点的行为和字段类型。类型将在下面详细说明。
+- `shown` {type: boolean} {可选} {callback}  
+控制节点及其内容是否渲染。默认值为 `true`。
+- `style` {type: StyleValue} {可选} {callback}  
+设置节点的样式。
+- `class` {type: ClassValue} {可选} {callback}  
+为节点应用 CSS 类。
 
-For `type: "spacer"`:
 
-- `size` {type: number | string} {optional}\
-Spacing in pixels or a CSS size such as `"2rem"`. Defaults to `"1rem"`. Applied to both width and height.
 
-#### Toggles
 
-Use `type: "toggle"` for a setting backed by layer state:
 
-- `label` {type: string} {required} {callback} {html}\
-Label beside the control.
-- `value` {type: BooleanStateKey | ValueBinding<boolean>} {required}\
-A top-level boolean field name from this layer's state, such as `"automation"`, or a value binding.
-An explicit binding uses:
-  - `get` {type: boolean} {required} {callback-only}\
-  Runs as `get(context)` to read the current setting.
-  - `set` {type: void} {required} {callback-only}\
-  Runs as `set(context, value)` when the setting changes. Initialize backing state through `startState`, the engine does not call this setter to create defaults.
+#### 部分
 
-#### Rows and columns
+使用 `type: "section"` 来渲染内置的功能集合：
 
-Use `type: "row"` for a horizontal group or `type: "column"` for a vertical group:
+- `feature` {type: "main" | "upgrades" | "buyables" | "clickables" | "challenges" | "milestones" | "achievements" | "grid" | "bars" | "infoboxes" | "forms"} {required}  
+选择要显示的内容。`"main"` 显示货币、重置控制、最佳/总计、被动获得速率以及层效果描述。
+- `title` {type: string} {可选} {callback} {html}  
+位于部分上方的标题。会覆盖自动生成的标题。`""` 可隐藏可见标题。
+- `layout` {type: "default" | "tree"} {可选}  
+默认为 `"default"`。树形布局将升级、可购买物品或可点击物品排列为自己的树状结构。
+- `ids` {type: string[]} {可选}  
+默认集合部分显示的物品 ID 和顺序。默认显示所有物品。`[]` 表示不显示任何物品。在 `main`、`grid` 或树形布局中不使用。
+- `rows` {type: string[][]} {required when: layout is "tree"}  
+用于树形布局的物品 ID 行。空行也会占用空间。不能与 `ids` 或默认布局同时使用。
 
-- `children` {type: LayoutNode[]} {required}\
-Nested nodes, displayed in the order they're written.
+物品分支会在同一树形部分内可见的端点之间绘制。它们不会创建购买前置条件。同一个物品可以出现在多个部分中。
+
+
+
+#### 文本、图片和间隔
+
+对于 `type: "text"`：
+
+- `text` {type: 字符串} {必要} {回调} {html}  
+节点显示的内容。
+
+对于 `type: "image"`：
+
+- `src` {type: 字符串} {必要} {回调}  
+图片的 URL。
+- `alt` {type: 字符串} {可选} {回调}  
+图片的替代文本。默认值为 `""`。
+
+对于 `type: "spacer"`：
+
+- `size` {type: 数字 | 字符串} {可选}  
+以像素或 CSS 尺寸(如 `"2rem"`)表示的间距。默认值为 `"1rem"`。同时应用于宽度和高度。
+
+
+
+#### 切换按钮
+
+使用 `type: "toggle"` 来创建由层状态支持的设置：
+
+- `label` {type: 字符串} {必要} {回调} {HTML}  
+控制旁边的标签。
+- `binding` {type: ValueBinding<boolean>} {必要}  
+将控制与支持的状态连接起来。
+- `get` {type: 布尔值} {必要} {仅回调}  
+以 `get(context)` 形式运行以读取当前设置。
+- `set` {type: void} {必要} {仅回调}  
+当设置更改时以 `set(context, value)` 形式运行。通过 `startState` 初始化支持状态，引擎不会调用此 setter 来创建默认值。
+
+
+
+#### 行和列
+
+使用 `type: "row"` 表示水平组，或 `type: "column"` 表示垂直组：
+
+- `children` {type: LayoutNode[]} {必要}  
+嵌套的节点，会按书写顺序显示。
 
 ```js
 ui: {
@@ -413,386 +432,396 @@ ui: {
 }
 ```
 
-### Tabs
 
-Use `type: "tabs"` inside a page to display one child page at a time:
 
-- `id` {type: string} {required}\
-Tab group ID, unique within its page scope. Rows, columns, and nested groups share that scope.
-- `tabs` {type: TabDefinition[]} {required}\
-Tabs in displayed order. Include at least one entry.
-  - `id` {type: string} {required}\
-  Tab ID, unique within the group.
-  - `title` {type: string} {required} {callback}\
-  Tab button text.
-  - `page` {type: LayoutNode[]} {required}\
-  Content displayed when this tab is selected.
-  - `shown` {type: boolean} {optional} {callback}\
-  Controls whether the tab is available. Defaults to `true`.
-  - `shouldNotify` {type: boolean} {optional} {callback: boolean | undefined}\
-  Overrides action notifications. Returning `undefined` uses the automatic check, which is also the default.
-  - `resetNotify` {type: boolean} {optional} {callback: boolean | undefined}\
-  Overrides reset notifications. Returning `undefined` uses the automatic check, which is also the default.
-- `defaultTab` {type: string} {optional}\
-ID to use when the current selection is unavailable. Defaults to the first available tab.
-- `equalWidth` {type: boolean} {optional}\
-If `true`, equal button widths are applied to groups at the same nesting depth and scope. Defaults to `false`.
 
-Selection stays on an available tab, otherwise falls back to `defaultTab`, then the first available tab. No page renders when all tabs are hidden. Tab selection survives ordinary navigation but is not saved and clears when player state is reset.
+### 标签页
 
-Automatic notifications inspect the feature categories in the tab’s page. A reset notification needs a `main` section. Embedded pages are excluded. Action notifications take priority over reset notifications. Colors come from the layer’s tree glow settings.
+在页面中使用 `type: "tabs"` 来一次显示一个子页面：
 
-### Embeds
+- `id` {type: 字符串} {必要}  
+标签组 ID，在页面范围内唯一。行、列和嵌套组共享该范围。
+- `tabs` {type: TabDefinition[]} {必要}  
+按显示顺序的标签列表。至少包含一条目。
+- `id` {type: 字符串} {必要}  
+标签 ID，在组内唯一。
+- `title` {type: 字符串} {必要} {回调}  
+标签按钮文本。
+- `page` {type: LayoutNode[]} {必要}  
+选中该标签时显示的内容。
+- `shown` {type: 布尔} {可选} {回调}  
+控制标签是否可用。默认值为 `true`。
+- `shouldNotify` {type: 布尔} {可选} {回调: 布尔 | 未定义}  
+覆盖操作通知。返回 `undefined` 会使用自动检查，这也是默认行为。
+- `resetNotify` {type: 布尔} {可选} {回调: 布尔 | 未定义}  
+覆盖重置通知。返回 `undefined` 会使用自动检查，这也是默认行为。
+- `defaultTab` {type: 字符串} {可选}  
+当当前选择不可用时使用的 ID。默认使用第一个可用的标签。
+- `equalWidth` {type: 布尔} {可选}  
+如果为 `true`，同一嵌套深度和范围的组按钮宽度相等。默认值为 `false`。
 
-Use `type: "embed"` to display or navigate to other layers. These nodes also use the common `shown`, `style`, and `class` fields.
+选择会停留在可用标签上，否则回退到 `defaultTab`，然后是第一个可用标签。所有标签隐藏时页面不会渲染。标签选择会在普通导航中保留，但不会保存，并且在玩家状态重置时清除。
 
-- `mode` {type: "normal" | "peek" | "deep"} {required}\
-`"normal"` displays a compact layer tree that navigates normally. `"peek"` renders another layer inline. `"deep"` opens a selected target where a layer is typically displayed and moves its origin to where the tree is typically displayed.
-- `source` {type: LayerHandle | EmbedSource} {required when: mode is "normal" or "deep"}\
-Layers offered by a normal or deep tree. A direct handle selects one layer.
-- `layer` {type: LayerHandle} {required when: mode is "peek"}\
-Target rendered inline by a peek.
-- `page` {type: LayoutNode[]} {optional}\
-Peek-specific page display override. Defaults to the target’s page; `[]` displays no page content. Calculations run in the target’s scope, use `context.stateOf(targetHandle)` to access its state.
-- `showLayerName` {type: boolean} {optional}\
-Shows the target’s name in peek or deep mode. Defaults to `false`.
-- `showSectionTitles` {type: boolean} {optional}\
-Adds generated section headings in peek or deep mode. Explicit section titles take precedence. Defaults to `false`.
+自动通知会检查标签页面中的功能分类。重置通知需要一个 `main` 部分。嵌入页面不包括在内。操作通知优先于重置通知。颜色来自层的树状发光设置。
 
-`EmbedSource` selects layers through these fields:
 
-- `root` {type: LayerHandle} {optional}\
-Starting layer for descendant traversal. Defaults to all layers.
-- `depth` {type: number} {optional}\
-Tree rows from the root displayed. `0` selects the root, `1` includes its children, and so on. Defaults to all descendants.
-- `include` {type: LayerHandle[]} {optional}\
-Adds layers outside the traversal. Defaults to `[]`.
-- `exclude` {type: LayerHandle[]} {optional}\
-Removes layers after traversal and inclusion. Defaults to `[]`.
 
-A layer connected to another layer is its child for embed traversal. Embed trees show unlocked, non-deactivated layers independently of main-tree `shown` settings.
 
-### Component styles
 
-`ui.componentStyles` applies named style overrides. Local feature styles override matching properties. See [Component Names](01/11?s=component-names) for the supported names and the elements they style.
 
-## setup: item collections
+### 嵌入
 
-The item collection properties create upgrades, buyables, clickables, challenges, milestones, achievements, a grid, bars, infoboxes, and forms. These are the built-in "gameplay features" (referred to as items) TMT provides.
+使用 `type: "embed"` 来显示或导航到其他层。这些节点同样使用常见的 `shown`、`style` 和 `class` 字段。
 
-The `upgrades`, `buyables`, `clickables`, `challenges`, `milestones`, `achievements`, `bars`, `infoboxes`, and `forms` collections use item IDs as keys. Each entry defines the corresponding item. `grid` is a single grid definition, not a collection.
+- `mode` {type: "normal" | "peek" | "deep"} {必要}  
+`"normal"` 显示一个紧凑的层树并进行正常导航。`"peek"` 在内联中渲染另一个层。`"deep"` 打开一个选定的目标层，通常显示该层的位置，并将其原点移动到通常显示树的位置。
+- `source` {type: LayerHandle | EmbedSource} {当 mode 为 "normal" 或 "deep" 时必要}  
+由普通或深度树提供的层。直接句柄选择一个层。
+- `layer` {type: LayerHandle} {当 mode 为 "peek" 时必要}  
+由 peek 内联渲染的目标层。
+- `page` {type: LayoutNode[]} {可选}  
+peek 特定的页面显示覆盖。默认为目标层的页面；`[]` 表示不显示页面内容。计算在目标范围内运行，可使用 `context.stateOf(targetHandle)` 访问其状态。
+- `showLayerName` {type: boolean} {可选}  
+在 peek 或 deep 模式下显示目标的名称。默认值为 `false`。
+- `showSectionTitles` {type: boolean} {可选}  
+在 peek 或 deep 模式下添加生成的章节标题。明确的章节标题优先。默认值为 `false`。
+
+`EmbedSource` 可以通过以下字段选择层：
+
+- `root` {type: LayerHandle} {可选}  
+子孙遍历的起始层。默认包括所有层。
+- `depth` {type: number} {可选}  
+从 root 显示的树层数。`0` 选择 root，`1` 包括其子节点，以此类推。默认包括所有子孙。
+- `include` {type: LayerHandle[]} {可选}  
+添加遍历之外的层。默认值为 `[]`。
+- `exclude` {type: LayerHandle[]} {可选}  
+在遍历和包含后移除层。默认值为 `[]`。
+
+一个层连接到另一个层时，在嵌入遍历中视为其子层。嵌入树独立显示未锁定、未禁用的层，而不受主树 `shown` 设置的影响。
+
+### 组件样式
+
+`ui.componentStyles` 应用命名的样式覆盖。本地功能样式会覆盖匹配的属性。请参阅 [组件名称](01/11?s=component-names) 了解支持的名称及它们对应的元素。
+
+
+
+
+
+## 设置：物品集合
+
+物品集合属性可以创建升级、可购买物品、可点击物品、挑战、里程碑、成就、网格、进度条、信息框和表单。这些都是 TMT 提供的内置`游戏功能`(称为物品)。
+
+`upgrades`、`buyables`、`clickables`、`challenges`、`milestones`、`achievements`、`bars`、`infoboxes` 和 `forms` 集合使用物品 ID 作为键。每个条目定义相应的物品。`grid` 是单个网格定义，而不是集合。
 
 ```js
 upgrades: {
-    doubleGain: {
-        description: "Double point gain",
-        cost: 10,
-        effect: () => 2
-    }
+  doubleGain: {
+    description: "获取点数加倍",
+    cost: 10,
+    effect: () => 2
+  }
 }
 ```
 
-Collections default to no entries. Use item IDs in context commands.
+集合默认没有条目。上下文命令中要使用物品 ID。
 
-Feature `unlocked` properties default to `true`. Ordinary interactions also require an unlocked, non-deactivated layer. Hiding an item differs from disabling an unaffordable action. Progression awards have their own rules described below.
+功能的 `unlocked` 属性默认值为 `true`。普通的交互也需要一个已解锁且未停用的层。隐藏物品不同于禁用无法购买的动作。进度奖励有自己规则，稍后会描述。
 
-Item display and eligibility calculations receive read-only item contexts with `context.id`. Action hooks receive writable contexts. Bars use layer contexts, and clickables and grids provide their local contexts. Styles and classes default to no overrides. Markers default to no marker except for the challenge completion indicator. Titles with a fallback display the item ID. Supplemental text and tooltips default to `""`.
+物品显示和资格计算接受只读物品上下文，并带有 `context.id`。动作钩子接收可写上下文。进度条使用层上下文，而可点击物品和网格提供它们的本地上下文。样式和类默认不覆盖。标记默认没有，除了挑战完成指示器。带有后备标题时显示物品 ID。补充文本和工具提示默认值为 `""`。
 
-Effects supply values for your formulas, they are not magically applied. Missing or inactive effects return `undefined`. Deactivation suppresses active effects while preserving state. Upgrade, challenge, milestone, and achievement effects also depend on earned ownership. Returned effect snapshots are read-only.
+效果提供公式值，它们不会被自动应用。缺失或未激活的效果返回 `undefined`。停用会抑制活动效果，同时保留状态。升级、挑战、里程碑和成就效果也依赖于已获得的所有权。返回的效果快照为只读。
 
-For display, each effect getter has a matching `preview[item]Effect` method which bypasses ownership, completion, visibility, and deactivation checks. See [Effect Previews](01/06?s=effect-previews) for the methods and their rules. Use normal getters in gameplay calculations.
+下面的章节描述每个内置集合和层的网格。
 
-The sections below describe each built-in collection and the layer’s grid.
+升级、可购买物品和可点击物品共享这些外观字段。其他物品类型支持它们自己的子集：
 
-Upgrades, buyables, and clickables share these appearance fields. Other item types support their own subsets:
+- `style` {type: StyleValue} {可选} {回调}  
+为物品设置样式。
+- `class` {type: ClassValue} {可选} {回调}  
+为物品应用 CSS 类。
+- `mark` {type: boolean | string} {可选} {回调}  
+为 `true` 时显示星标，为 URL 时显示自定义片，为 `false` 时不显示标记。
+- `tooltip` {type: string} {可选} {回调} {html}  
+显示在物品提示中的文本。
+- `branches` {type: ItemBranchDefinition[]} {可选}  
+与同一集合中其他物品的视觉连接。物品 ID 使用默认连接外观。通过这些字段自定义连接：
+  - `target` {type: string} {必要}  
+  目标物品的 ID。
+  - `color` {type: string} {可选}  
+  连接的颜色。默认为 `"#ffffff"`。
+  - `width` {type: number} {可选}  
+  连接的宽度。默认为 `15`。
 
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the item.
-- `class` {type: ClassValue} {optional} {callback}\
-Applies CSS classes to the item.
-- `mark` {type: boolean | string} {optional} {callback}\
-Shows a star when `true`, a custom image when given a URL, or no marker when `false`.
-- `tooltip` {type: string} {optional} {callback} {html}\
-Text shown in the item’s tooltip.
-- `branches` {type: ItemBranchDefinition[]} {optional}\
-Visual connections to other items in the same collection. An item ID uses the default connection appearance. Customize a connection through these fields:
-  - `target` {type: string} {required}\
-  The destination item’s ID.
-  - `color` {type: string} {optional}\
-  The connection’s color. Defaults to `"#ffffff"`.
-  - `width` {type: number} {optional}\
-  The connection’s width. Defaults to `15`.
+### 升级upgrade {type: Record<string, UpgradeDefinition>} {可选}
 
-### upgrades {type: Record<string, UpgradeDefinition>} {optional}
+升级是TMT游戏的经典特色。购买一次即可获得某种效果。每个升级有以下属性：
 
-Upgrades are the quintessential TMT game feature. Buy them once to gain some effect. Each upgrade has the following properties:
+- `title` {type: string} {可选} {callback} {html}  
+控制显示在升级描述上方的文本。
+- `description` {type: string} {required when: fullDisplay is omitted} {callback} {html}  
+控制升级显示的主要文本。
+- `effectDisplay` {type: string} {可选} {callback} {html}  
+描述升级效果的文本，显示在描述下方。
+- `fullDisplay` {type: string} {required when: description is omitted} {callback} {html}  
+替代普通的升级标题、描述、效果文本和成本显示。
+- `cost` {type: DecimalSource} {required} {callback}  
+控制玩家购买升级所需花费的货币。
+- `currency` {type: DecimalResource} {可选}  
+默认使用该层的货币。控制升级使用哪种货币判定是否可购买，以及扣除哪种货币。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制升级是否显示。
+- `canAfford` {type: boolean} {可选} {callback}  
+添加可负担条件。选定货币必须足够支付，默认检查不被覆盖。
+- `pay` {type: void} {可选} {callback-only}  
+以 `pay(context, cost)` 形式执行，覆盖默认货币扣除。所有权仍会正常记录。其他购买效果使用 `onPurchase`。
+- `onPurchase` {type: void} {可选} {callback-only}  
+升级被购买时执行。
+- `effect` {type: any} {可选} {callback-only}  
+计算 `context.getUpgradeEffect(id)` 返回的效果。
 
-- `title` {type: string} {optional} {callback} {html}\
-Controls the text displayed above an upgrade's description.
-- `description` {type: string} {required when: fullDisplay is omitted} {callback} {html}\
-Controls the main text displayed on an upgrade.
-- `effectDisplay` {type: string} {optional} {callback} {html}\
-Text describing the upgrade’s effect, shown below its description.
-- `fullDisplay` {type: string} {required when: description is omitted} {callback} {html}\
-Replaces the normal upgrade title, description, effect text, and cost display.
-- `row` {type: number} {optional}\
-A nonnegative integer, default `0`. Unused rows do not add blank space. Explicit section `ids` and item-tree `rows` take precedence.
-- `cost` {type: DecimalSource} {required} {callback}\
-Controls how much of a given currency a player must spend to purchase an upgrade.
-- `currency` {type: DecimalResource} {optional}\
-Defaults to the layer’s own currency. Controls what currency an upgrade uses to determine its affordability, and what currency is reduced by its cost.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls whether an upgrade is displayed.
-- `canAfford` {type: boolean} {optional} {callback}\
-Adds an affordability condition. The selected currency must still cover the cost, the default check is not overridden.
-- `pay` {type: void} {optional} {callback-only}\
-Runs as `pay(context, cost)` and overrides the default currency deduction. Ownership is still recorded normally. Use `onPurchase` for additional purchase effects.
-- `onPurchase` {type: void} {optional} {callback-only}\
-Runs when an upgrade is purchased.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the effect read by `context.getUpgradeEffect(id)` for application or `context.previewUpgradeEffect(id)` for display.
+### 可购买buyable {type: Record<string, BuyableDefinition>} {可选}
 
-### buyables {type: Record<string, BuyableDefinition>} {optional}
+可购买项目是可以多次购买的升级。每个可购买项目都有以下属性：
 
-Buyables are upgrades which can be purchased more than once. Each buyable has the following properties:
+- `title` {type: string} {可选} {callback} {html}  
+控制显示在可购买项目顶部的文本。
+- `display` {type: string} {required} {callback} {html}  
+控制显示在可购买项目主体的文本。
+- `effectDisplay` {type: string} {可选} {callback} {html}  
+描述可购买项目效果的文本，显示在主体文本下方。
+- `cost` {type: DecimalSource} {required} {callback}  
+控制购买该可购买项目所需支付的货币数量。
+- `currency` {type: DecimalResource} {可选}  
+默认使用所在层的货币。控制用于判断可购买项目是否能负担的货币类型，以及购买后减少的货币类型。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制可购买项目是否显示。
+- `initialAmount` {type: DecimalSource} {可选}  
+可购买项目初始等级数量。默认为 `0`。
+- `purchaseLimit` {type: DecimalSource} {可选} {callback}  
+限制可购买数量上限。必须是有限值。默认没有上限。
+- `canAfford` {type: boolean} {可选} {callback}  
+添加可负担性条件。选定的货币必须仍然能覆盖成本，默认检查不会被覆盖。
+- `buy` {type: void} {可选} {callback-only}  
+以 `buy(context, cost)` 运行，替代默认支付和数量递增。仍会检查可负担性。
+- `buyMax` {type: void} {可选} {callback-only}  
+赋予可购买项目的最大购买按钮功能。
+- `canSellOne` {type: boolean} {可选} {callback}  
+控制是否可以执行 sellOne。默认 `true`。
+- `sellOne` {type: void} {可选} {callback-only}  
+赋予可购买项目单次出售按钮功能。
+- `canSellAll` {type: boolean} {可选} {callback}  
+控制是否可以执行 sellAll。默认 `true`。
+- `sellAll` {type: void} {可选} {callback-only}  
+赋予可购买项目全部出售按钮功能。
+- `onPurchase` {type: void} {可选} {callback-only}  
+在成功执行单次购买操作后(包括自定义 `buy`)，以 `onPurchase(context)` 运行。最大购买不会触发此函数。
+- `effect` {type: any} {可选} {callback-only}  
+计算通过 `context.getBuyableEffect(id)` 返回的效果。
 
-- `title` {type: string} {optional} {callback} {html}\
-Controls the text displayed at the top of a buyable.
-- `display` {type: string} {required} {callback} {html}\
-Controls the text displayed on the main body of a buyable.
-- `effectDisplay` {type: string} {optional} {callback} {html}\
-Text describing the buyable’s effect, shown below its display text.
-- `cost` {type: DecimalSource} {required} {callback}\
-Controls how much of a given currency a player must spend to purchase a buyable.
-- `currency` {type: DecimalResource} {optional}\
-Defaults to the layer’s own currency. Controls what currency a buyable uses to determine its affordability, and what currency is reduced by its cost.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls whether a buyable is displayed.
-- `initialAmount` {type: DecimalSource} {optional}\
-The initial number of buyable levels. Defaults to `0`.
-- `showAmount` {type: boolean} {optional} {callback}\
-Controls whether the default amount display is shown, Defaults to `true`.
-- `purchaseLimit` {type: DecimalSource} {optional} {callback}\
-Caps the amount that can be purchased. Must be finite. Defaults to no cap.
-- `canAfford` {type: boolean} {optional} {callback}\
-Adds an affordability condition. The selected currency must still cover the cost, the default check is not overridden.
-- `buy` {type: void} {optional} {callback-only}\
-Runs as `buy(context, cost)` and replaces both the default payment and amount increment. Affordability is still checked.
-- `buyMax` {type: void} {optional} {callback-only}\
-Grants the buyable's buymax button functionality.
-- `canSellOne` {type: boolean} {optional} {callback}\
-Controls whether sellOne can run. Defaults to `true`.
-- `sellOne` {type: void} {optional} {callback-only}\
-Grants the buyable's sell one button functionality.
-- `canSellAll` {type: boolean} {optional} {callback}\
-Controls whether sellAll can run. Defaults to `true`.
-- `sellAll` {type: void} {optional} {callback-only}\
-Grants the buyable's sell all button functionality.
-- `onPurchase` {type: void} {optional} {callback-only}\
-Runs as `onPurchase(context)` after a successful buy-one operation, including a custom `buy`. Buy Max does not invoke it.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the effect returned by `context.getBuyableEffect(id)`.
+购买一次时会检查可用性、成本和购买上限，然后扣费、增加数量，并运行 `onPurchase`。自定义 `buy` 可控制支付和数量递增。结果数量超过当前上限时会被拒绝而不是限制在上限。
 
-Buying one checks availability, cost, and the purchase limit, then pays, increments the amount, and runs `onPurchase`. Custom `buy` controls the payment and increment. A resulting amount above the current limit is rejected rather than clamped.
 
-Holding the main button repeatedly triggers normal `buy`.
+### 可购买重置buyableRespec {type:BuyableRespecDefinition} {可选}
 
-### buyableRespec {type: BuyableRespecDefinition} {optional}
+为可购买区域添加重置属性控制。界面会先请求确认，然后重新检查可用性。调用`context.respecBuyables()`直接执行重置属性，无需打开对话框。
 
-Adds a respec control to buyable sections. The UI asks for confirmation and then rechecks availability. Calling `context.respecBuyables()` directly runs the respec without opening a dialog.
+- `label` {type: string} {可选} {callback}
+按钮文字。默认为`重置`。确认对话框也用它作为标题。
+- `unlocked` {type:布林值} {可选} {回拨}
+控制重置技能点的动作是否可用。默认为`true`。
+- `confirmation` {type: 字符串} {可选} {callback} {html}
+界面运行重置点前会显示提示。默认是`你确定吗？`.
+- `onRespec` {type: void} {required} {仅回调}
+接受后以`onRespec(context)`运行。引擎没有默认的重置特性。
 
-- `label` {type: string} {optional} {callback}\
-Button text. Defaults to `"Respec"`. The confirmation dialog also uses it as its title.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls whether the respec action is available. Defaults to `true`.
-- `confirmation` {type: string} {optional} {callback} {html}\
-Message displayed before the UI runs the respec. Defaults to `"Are you sure?"`.
-- `onRespec` {type: void} {required} {callback-only}\
-Runs as `onRespec(context)` after acceptance. The engine has no default respec behavior.
 
-### clickables {type: Record<string, ClickableDefinition>} {optional}
+### 可点击clickable {type: Record<string, ClickableDefinition>} {可选}
 
-Clickables perform actions when clicked or held. The default click toggles `true` and `false`. Use `onClick` to define their click behavior. Each clickable has the following properties:
+可点击项在点击或长按时会执行操作。默认点击会在 `true` 和 `false` 之间切换。使用 `onClick` 来定义点击行为。每个可点击项有以下属性：
 
-- `title` {type: string} {optional} {callback} {html}\
-Controls the text displayed at the top of a clickable.
-- `display` {type: string} {required} {callback} {html}\
-Controls the text displayed on the main body of a clickable.
-- `initialValue` {type: any} {optional}\
-The clickable’s initial value. Defaults to `false`.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls whether a clickable is displayed.
-- `canClick` {type: boolean} {optional} {callback}\
-Controls whether a clickable can be interacted with.
-- `onClick` {type: void} {optional} {callback-only}\
-Runs as `onClick(context)` when the clickable is activated.
-- `onHold` {type: void} {optional} {callback-only}\
-Runs as `onHold(context, interval)` while the clickable is held. `interval` is elapsed time in seconds.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the effect returned by `context.getClickableEffect(id)`.
+- `title` {type: string} {可选} {callback} {html}  
+控制显示在可点击项顶部的文字。
+- `display` {type: string} {required} {callback} {html}  
+控制显示在可点击项主体的文字。
+- `initialValue` {type: any} {可选}  
+可点击项的初始值。默认是 `false`。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制可点击项是否显示。
+- `canClick` {type: boolean} {可选} {callback}  
+控制可点击项是否可以被操作。
+- `onClick` {type: void} {可选} {callback-only}  
+在可点击项被触发时执行 `onClick(context)`。
+- `onHold` {type: void} {可选} {callback-only}  
+在可点击项被长按时执行 `onHold(context, interval)`。`interval` 是经过的秒数。
+- `effect` {type: any} {可选} {callback-only}  
+计算 `context.getClickableEffect(id)` 返回的效果。
 
-Within clickable callbacks, `context.value` exposes the current payload as read-only. Use `context.setValue(nextValue)` to replace it. Cross-item operations use `context.getClickableState(id)` and `context.setClickableState(id, nextValue)`.
+在可点击项的回调中，`context.value` 以只读方式暴露当前数据。使用 `context.setValue(nextValue)` 来替换它。跨项操作使用 `context.getClickableState(id)` 和 `context.setClickableState(id, nextValue)`。
 
-Pointer holds wait 250ms, then repeat on a 50ms interval. A hold suppresses the trailing click. Release, cancellation, hidden UI, lost eligibility, modals, navigation that removes the control, and player-state replacement stop the hold. Direct `context.holdClickable(id, interval)` performs one invocation and creates no timer.
+指针长按等待 250ms，然后每 50ms 重复一次。长按会抑制尾随点击。释放、取消、隐藏的界面、丧失资格、弹窗、移除控件的导航以及玩家状态替换都会停止长按。直接使用 `context.holdClickable(id, interval)` 会执行一次调用，并且不会创建计时器。
 
-### challenges {type: Record<string, ChallengeDefinition>} {optional}
+### 挑战challenges {type: Record<string， ChallengeDefinition>} {可选}
 
-Challenges temporarily change gameplay while active and award completions. Only one challenge per layer can be entered at a time, but `countsAs` can make more active. Use `context.inChallenge(id)` in gameplay calculations and `context.getChallengeCompletions(id)` to read completions.
+挑战在激活时会暂时改变游戏玩法并奖励完成任务。每层一次只能进入一个挑战，但`countsAs`可以让更多挑战进入激活。在游戏计算中使用`context.inChallenge(id)`，读取完成任务时使用`context.getChallengeCompletions(id)`。
 
-- `title` {type: string} {optional} {callback} {html}\
-Controls the text displayed at the top of a challenge.
-- `description` {type: string} {required when: fullDisplay is omitted} {callback} {html}\
-Explains the challenge’s gameplay restrictions.
-- `goalDescription` {type: string} {required when: fullDisplay is omitted} {callback} {html}\
-Explains the completion goal.
-- `rewardDescription` {type: string} {required when: fullDisplay is omitted} {callback} {html}\
-Explains the reward.
-- `rewardDisplay` {type: string} {optional} {callback} {html}\
-Shows the current reward effect. Defaults to `""`.
-- `fullDisplay` {type: string} {required when: description, goalDescription, or rewardDescription is omitted} {callback} {html}\
-Replaces the normal title, descriptive content, and completion counter.
-- `goal` {type: DecimalSource} {required when: canComplete is omitted} {callback}\
-Completion threshold compared with `goalResource`. Must be finite and nonnegative.
-- `goalResource` {type: DecimalResource} {optional}\
-Resource checked against `goal`. Defaults to the layer’s own currency.
-- `canComplete` {type: boolean} {required when: goal is omitted} {callback}\
-Determines completion eligibility, replacing the resource-versus-goal check.
-- `completionLimit` {type: number} {optional} {callback}\
-Maximum completions. Defaults to `1`. Use a nonnegative integer or `Infinity` for no cap.
-- `showCompletions` {type: boolean} {optional} {callback}\
-Controls whether the default completion display is shown. Defaults to `true`. Has no effect when `fullDisplay` is supplied.
-- `completionGain` {type: number} {optional} {callback}\
-Completions awarded per successful completion. Defaults to `1`. Must be a nonnegative integer. Awards are capped by the remaining limit.
-- `countsAs` {type: string[]} {optional}\
-Other challenge IDs treated as active by `inChallenge` while this challenge runs. Defaults to `[]`. References stay within this layer and apply directly, without following further `countsAs` links. They do not grant rewards or completions.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls visibility and interaction. Defaults to `true`.
-- `canEnter` {type: boolean} {optional} {callback}\
-Additional entry condition. Defaults to `true`. Entry always checks that no challenge is active and that this challenge is below its completion limit.
-- `canExit` {type: boolean} {optional} {callback}\
-Controls whether the active challenge can be exited. Defaults to `true`.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the reward read by `context.getChallengeEffect(id)`. Available after this challenge has earned a completion.
-- `onEnter` {type: void} {optional} {callback-only}\
-Runs as `onEnter(context)` after the challenge-enter reset and activation.
-- `onComplete` {type: void} {optional} {callback-only}\
-Runs as `onComplete(context, gained, total)` after completions are recorded. `gained` is the actual award and `total` the resulting completion count.
-- `onExit` {type: void} {optional} {callback-only}\
-Runs as `onExit(context)` after a final completion attempt and clearing the active challenge, before the challenge-exit reset.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the challenge.
-- `class` {type: ClassValue} {optional} {callback}\
-Applies classes to the challenge.
-- `mark` {type: boolean | string} {optional} {callback}\
-Overrides the completion marker. The default shows a star for a maxed challenge with a completion limit above `1`. Use `false` to hide it.
+- `title` {type: string} {可选} {callback} {html}
+控制挑战顶部显示的文字。
+- `description` {type: string} {required when : fullDisplay is omitted} {callback} {html}
+描述挑战时的游戏限制。
+- `goalDescription` {type: string} {required when : fullDisplay is missitted} {callback} {html}
+描述完成目标。
+- `rewardDescription` {type: string} {必要时：fullDisplay 被省略} {callback} {html}
+描述奖励。
+- `rewardDisplay` {type: string} {可选} {callback} {html}
+显示当前奖励效果。默认为`""`。
+- `fullDisplay` {type: string} {必要时：省略描述、目标描述或reward描述} {callback} {html}
+取代了正常的标题和描述性内容。
+- `goal` {type: DecimalSource} {省略时需要：canComplete} {callback}
+完成阈值与`goalResource`的比较。必须是有限且非负的。
+- `goalResource` {type: DecimalResource} {可选}
+资源与`目标`进行检验。默认使用该层自身的货币。
+- `canComplete` {type: 布尔值} {当目标被省略时必须} {回调}
+确定完成资格，取代资源与目标的检验。
+- `completionLimit` {type: number} {可选}
+最大完成次数。默认为`1`。使用非负整数或`无限`表示无上限。
+- `completionGain` {type: number} {可选} {callback}
+每成功完成一次可获得的完成次数。默认为`1`。必须是非负整数。奖励上限为剩余的上限。
+- `countsAs` {type: 字符串[]} {可选}
+其他挑战ID在本挑战运行时被`inChallenge`视为激活。默认为`[]`。引用保持在此层内，直接应用，无需再经过`countsAs`链接。它们不授予奖励或完成。
+- `unlocked` {type:布林值} {可选} {回拨}
+控制可见性和交互。默认为`true`。
+- `canEnter` {type: boolean} {可选} {callback}
+额外参赛条件。默认为`true`。参赛总是检查没有挑战处于激活状态，且该挑战未完成其完成度。
+- `canExit` {type: boolean} {可选} {callback}
+控制当前挑战是否可以退出。默认为`true`。
+- `effect` {type:任意} {可选} {仅回调}
+计算`context.getChallengeEffect(id)`读取的奖励。完成后该挑战可获得。
+- `onEnter` {type: void} {可选} {callback-only}
+在挑战-进入重置和激活后，以`onEnter(context)`运行。
+- `onComplete` {type: void} {可选} {仅回调}
+完成次数记录后，运行为`onComplete(context， gained， total)`。`gained`是实际奖励，`total`是最终完成计数。
+- `onExit` {type: void} {可选} {callback-only}
+在完成最后一次尝试并清除当前挑战后，以`onExit(context)`形式运行，之后挑战出口会重置。
+- `style` {type: StyleValue} {可选} {callback}
+设置挑战的样式
+- `class` {type: ClassValue} {可选} {callback}
+将职业应用于挑战。
+- `mark` {type:布尔 | 字符串} {可选} {callback}
+覆盖完成标记。默认情况下，完成度超过`1`的挑战显示星级。用`false`来隐藏它。
 
-`context.completeChallenge(id)` awards progress while leaving the challenge active. The stock "Complete" button calls `exitChallenge`, so it also exits and resets.
+进入和退出重置源层及其目标。源层的挑战完成历史独立于普通保留，能在两种操作中保持完整。
+
+`context.completeChallenge(id)` 在保持挑战激活的同时奖励进度。默认的`完成`按钮调用`exitChallenge`，因此它也会退出和重置。
 
 ```js
 challenges: {
     lowPower: {
-        description: "Point gain is reduced while this challenge is active.",
-        goalDescription: "Reach 100 layer points.",
-        rewardDescription: "Unlock a permanent multiplier.",
+        description: "挑战中点数减少",
+        goalDescription: "到达100点数",
+        rewardDescription: "解锁永久倍数。",
         goal: 100,
         effect: () => 2
     }
 }
 ```
 
-The challenge declaration supplies the goal and reward value. Apply the restriction and reward in your own gain calculations.
+挑战声明中会显示目标和奖励价值。在你的收益计算中应用限制和奖励。
 
-### milestones {type: Record<string, MilestoneDefinition>} {optional}
 
-Milestones award persistent progress automatically. After automation, the engine checks milestones and then achievements in declaration order for each layer, ordered by row. Locked layers are still checked, deactivated layers are not.
 
-- `requirementDescription` {type: string} {required} {callback} {html}\
-Explains how to earn the milestone.
-- `effectDescription` {type: string} {required} {callback} {html}\
-Explains its reward.
-- `done` {type: boolean} {required} {callback}\
-Determines when an unearned milestone is awarded. Requires `unlocked` to evaluate to `true`.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls visibility and award eligibility. Defaults to `true`.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the reward read by `context.getMilestoneEffect(id)` after the milestone is earned.
-- `onComplete` {type: void} {optional} {callback-only}\
-Runs as `onComplete(context)` after ownership is recorded, before its completion popup.
-- `toggles` {type: MilestoneToggleDefinition[]} {optional}\
-Controls displayed alongside an earned milestone. Defaults to `[]`. Each toggle uses these fields:
-  - `label` {type: string} {required} {callback}\
-  Text beside the toggle.
-  - `value` {type: BooleanStateKey | ValueBinding<boolean>} {required}\
-  A top-level boolean field name from this layer's state, such as `"automation"`, or an explicit binding.\
-  An explicit binding uses:
-    - `get` {type: boolean} {required} {callback-only}\
-    Runs as `get(context)` to read the current setting.
-    - `set` {type: void} {required} {callback-only}\
-    Runs as `set(context, value)` with the new setting. Initialize its backing state in `startState`, creating the toggle does not call this setter.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the milestone.
+### 里程碑milestone {type: Record<string, MilestoneDefinition>} {可选}
 
-Use `context.hasMilestone(id)` to check ownership. `context.toggleMilestone(id, index)` uses a zero-based toggle index, checks current eligibility and ownership, reverses the getter’s result, and calls the setter.
+里程碑会自动奖励持久进度。自动化之后，引擎会按声明顺序检查每个层的里程碑和成就，按行排序。锁定的层仍会被检查，停用的层则不会。
 
-### achievements {type: Record<string, AchievementDefinition>} {optional}
+- `requirementDescription` {type: string} {必要} {回调} {html}  
+解释如何获得该里程碑。
+- `effectDescription` {type: string} {必要} {回调} {html}  
+解释其奖励效果。
+- `done` {type: boolean} {必要} {回调}  
+决定何时授予尚未获得的里程碑。需要 `unlocked` 为 true 才能评估。
+- `unlocked` {type: boolean} {可选} {回调}  
+控制可见性和奖励资格。默认值为 true。
+- `effect` {type: any} {可选} {仅回调}  
+在里程碑获得后，通过 `context.getMilestoneEffect(id)` 获取奖励。
+- `onComplete` {type: void} {可选} {仅回调}  
+在记录所有权后、完成弹窗前以 `onComplete(context)` 运行。
+- `toggles` {type: MilestoneToggleDefinition[]} {可选}  
+控制已获得里程碑旁显示的开关。默认值为 `[]`。每个开关使用以下字段：
+  - `label` {type: string} {必要} {回调}  
+  开关旁的文本。
+  - `value` {type: ValueBinding<boolean>} {必要}  
+  将开关与支持状态连接：
+    - `get` {type: boolean} {必要} {仅回调}  
+    以 `get(context)` 读取当前设置。
+    - `set` {type: void} {必要} {仅回调}  
+    以 `set(context, value)` 设置新的值。请在 `startState` 中初始化支持状态，创建开关不会调用此 setter。
+  - `style` {type: StyleValue} {可选} {回调}  
+  设置里程碑样式。
 
-Achievements follow the same progression checks as milestones.
+使用 `context.hasMilestone(id)` 检查所有权。`context.toggleMilestone(id, index)` 使用从零开始的开关索引，检查当前资格和所有权，反转 getter 的结果，并调用 setter。
 
-- `title` {type: string} {required} {callback} {html}\
-Heading on the achievement.
-- `description` {type: string} {required} {callback} {html}\
-Explains the achievement.
-- `done` {type: boolean} {required} {callback}\
-Determines whether an unearned achievement is awarded.
-- `image` {type: string} {optional} {callback}\
-Image URL displayed on the achievement. Defaults to no image.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls visibility and award eligibility. Defaults to `true`.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the reward read by `context.getAchievementEffect(id)` after it is earned.
-- `onComplete` {type: void} {optional} {callback-only}\
-Runs as `onComplete(context)` after ownership is recorded, before its completion popup.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the achievement.
-- `class` {type: ClassValue} {optional} {callback}\
-Applies classes to the achievement.
-- `mark` {type: boolean | string} {optional} {callback}\
-Shows a star for `true`, a custom image for a URL, or no marker for `false`. Defaults to `false`.
 
-Check ownership with `context.hasAchievement(id)`.
+### 成就achievement {type: Record<string, AchievementDefinition>} {可选}
 
-### grid {type: GridDefinition} {optional}
+成就遵循与里程碑相同的进度检查。
 
-Defines the layer’s grid. Coordinates start at `1`. A cell’s key is `"row:column"`, such as `"2:3"`. Cell callbacks expose `context.row`, `context.column`, `context.key`, and `context.data`.
+- `title` {type: string} {required} {callback} {html}  
+成就标题。
+- `description` {type: string} {required} {callback} {html}  
+成就说明。
+- `done` {type: boolean} {required} {callback}  
+决定未获得的成就是否被授予。
+- `image` {type: string} {可选} {callback}  
+成就显示的图片 URL。默认无图片。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制可见性和奖励资格。默认值为 `true`。
+- `effect` {type: any} {可选} {callback-only}  
+在成就被获得后计算奖励，可由 `context.getAchievementEffect(id)` 读取。
+- `onComplete` {type: void} {可选} {callback-only}  
+在记录拥有权后、完成弹窗前作为 `onComplete(context)` 运行。
+- `style` {type: StyleValue} {可选} {callback}  
+设置成就样式。
+- `class` {type: ClassValue} {可选} {callback}  
+为成就应用类。
+- `mark` {type: boolean | string} {可选} {callback}  
+`true` 显示星标，URL 显示自定义图片，`false` 不显示标记。默认值为 `false`。
 
-- `rows` {type: number} {required} {callback}\
-Current row count. Must be an integer from `0` to `1000`.
-- `columns` {type: number} {required} {callback}\
-Current column count. Must be an integer from `0` to `1000`.
-- `startData` {type: any} {required} {callback-only}\
-Runs as `startData(context)` to initialize a cell payload. Its context provides coordinates.
-- `title` {type: string} {optional} {callback} {html}\
-Heading for the cell. Defaults to its key, such as `"2:3"`.
-- `display` {type: string} {optional} {callback} {html}\
-Content inside the cell. Defaults to `""`.
-- `tooltip` {type: string} {optional} {callback} {html}\
-Cell tooltip. Defaults to `""`.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls cell visibility and interaction. Defaults to `true`. Hidden cells still take up their space.
-- `canClick` {type: boolean} {optional} {callback}\
-Additional requirement for click and hold actions. Defaults to `true`.
-- `onClick` {type: void} {optional} {callback-only}\
-Runs as `onClick(context)` when the cell is clicked. The grid has no default click action.
-- `onHold` {type: void} {optional} {callback-only}\
-Runs as `onHold(context, interval)` while held. `interval` measures elapsed seconds. Timing and cancellation follow clickable holds.
-- `effect` {type: any} {optional} {callback-only}\
-Computes the value read through `context.getGridEffect(key)` or `context.getGridEffect(row, column)`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the cell.
+使用 `context.hasAchievement(id)` 检查是否拥有成就。
 
-Read contexts protect `context.data` from mutation. In write hooks, nested cell data can be changed directly. Replace a whole payload with `context.setGridData(context.key, value)`. Reads and explicit setters also accept coordinates such as `context.getGridData(2, 3)`.
 
-Shrinking dimensions hides cells without deleting stored data. Explicit setters can set cells outside the displayed dimensions, within the coordinate bounds `1` through `1000`. Saved entries and retention use cell keys.
+### 网格grid {type:网格定义} {可选}
+
+定义层的网格。坐标从`1`开始。单元格的键是`row：column`，如`2：3`。单元回调暴露`context.row`、`context.column`、`context.key`和`context.data`。
+
+- `row` {type: 编号} {必需} {回调}
+当前行数。必须是从`0`到`1000`的整数。
+- `columns` {type: number} {required} {callback}
+当前列数。必须是从`0`到`1000`的整数。
+- `startData` {type: any} {required} {仅回调}
+以`startData(context)`形式运行，用于初始化单元有效载荷。其上下文提供坐标。
+- `title` {type: string} {可选} {callback} {html}
+正前往牢房。默认按键，比如`2:3`。
+- `display` {type: string} {可选} {callback} {html}
+单元格内的内容。默认为`""`。
+- `tooltip` {type: string} {可选} {callback} {html}
+单元格提示。默认为`""`。
+- `unlock` {type:布林值} {可选} {回拨}
+控制单元的可见性和交互。默认为`true`。隐藏单元仍然占用它们的空间。
+- `canClick` {type:布尔值} {可选} {callback}
+额外要求点击并长按操作。默认为`true`。
+- `onClick` {type: void} {可选} {仅回调}
+点击单元格时，运行为`onClick(context)`。网格没有默认点击操作。
+- `onHold` {type: void} {可选} {callback-only}
+按住时以`onHold(context， interval)`形式运行。`interval`衡量经过的秒数。可点击的暂停后进行计时和取消。
+- `effect` {type:任意} {可选} {仅回调}
+计算通过`context.getGridEffect(key)`或`context.getGridEffect(row， column)`读取的值。
+- `style`  {type: StyleValue} {可选} {callback}
+给格子格式
+
+读取上下文保护`context.data`免受变异。在写钩中，嵌套单元数据可以直接更改。用`context.setGridData(context.key， value)`替换整个有效载荷。读取和显式设置器也接受坐标，如`context.getGridData(2, 3)`。
+
+缩小维度可以隐藏单元格，但不会删除存储数据。显式设置器可以在显示尺寸之外设置单元格，在坐标边界`1`到`1000`之间。保存条目和保留使用单元键。
+
 
 ```js
 grid: {
@@ -804,127 +833,148 @@ grid: {
 }
 ```
 
-### bars {type: Record<string, BarDefinition>} {optional}
 
-Displays progress derived from your state. Bars have no separate saved progress value. These fields use the layer’s read context.
 
-- `direction` {type: "left" | "right" | "up" | "down"} {optional}\
-Fill direction. Defaults to `"right"`.
-- `width` {type: number} {optional} {callback}\
-Width in pixels. Must be finite and nonnegative. Defaults to `180`.
-- `height` {type: number} {optional} {callback}\
-Height in pixels. Must be finite and nonnegative. Defaults to `24`.
-- `progress` {type: number} {required} {callback}\
-Filled fraction. Must be finite, clamped between `0` and `1`.
-- `display` {type: string} {optional} {callback} {html}\
-Text displayed over the bar. Defaults to `""`.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls visibility. Defaults to `true`.
-- `instant` {type: boolean} {optional}\
-Disables the fill animation when `true`. Defaults to `false`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the outer bar.
-- `borderStyle` {type: StyleValue} {optional} {callback}\
-Styles the border.
-- `baseStyle` {type: StyleValue} {optional} {callback}\
-Styles the unfilled background.
-- `fillStyle` {type: StyleValue} {optional} {callback}\
-Styles the filled region.
-- `textStyle` {type: StyleValue} {optional} {callback}\
-Styles the overlaid text.
+### 进度条bars {type: Record<string, BarDefinition>} {可选}
 
-### infoboxes {type: Record<string, InfoboxDefinition>} {optional}
+显示根据你的状态得出的进度。进度条本身没有单独保存的进度值。这些字段使用层的读取上下文。
 
-Displays collapsible information. Clicking the header toggles the saved collapse state in `context.layerState.infoboxes[id]`.
+- `direction` {type: "left" | "right" | "up" | "down"} {可选}  
+填充方向。默认值为 `"right"`。
+- `width` {type: number} {可选} {callback}  
+宽度(像素)。必须是有限且非负数。默认值为 `180`。
+- `height` {type: number} {可选} {callback}  
+高度(像素)。必须是有限且非负数。默认值为 `24`。
+- `progress` {type: number} {required} {callback}  
+填充比例。必须是有限数值，范围在 `0` 到 `1` 之间。
+- `display` {type: string} {可选} {callback} {html}  
+显示在条上的文本。默认值为 `""`。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制可见性。默认值为 `true`。
+- `instant` {type: boolean} {可选}  
+为 `true` 时禁用填充动画。默认值为 `false`。
+- `style` {type: StyleValue} {可选} {callback}  
+设置外部条的样式。
+- `borderStyle` {type: StyleValue} {可选} {callback}  
+设置边框样式。
+- `baseStyle` {type: StyleValue} {可选} {callback}  
+设置未填充区域的背景样式。
+- `fillStyle` {type: StyleValue} {可选} {callback}  
+设置已填充区域的样式。
+- `textStyle` {type: StyleValue} {可选} {callback}  
+设置覆盖文本的样式。
 
-- `title` {type: string} {required} {callback} {html}\
-Heading on the collapse control.
-- `body` {type: string} {required} {callback} {html}\
-Content inside the box.
-- `collapsed` {type: boolean} {optional}\
-Initial collapse state. Defaults to `false`. `startState.infoboxes` can override it.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls visibility and interaction. Defaults to `true`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the outer box.
-- `titleStyle` {type: StyleValue} {optional} {callback}\
-Styles the header.
-- `bodyStyle` {type: StyleValue} {optional} {callback}\
-Styles the body.
 
-The current collapse state is retained during resets.
 
-### forms {type: Record<string, FormDefinition>} {optional}
 
-Adds editable controls. `defaultValue` is stored at `context.layerState.inputs[id]`. `value` connects a control to your own backing state. These two configurations cannot be combined.
 
-- `type` {type: "text" | "slider" | "dropdown"} {required}\
-Selects the form type. `define.dropdown` supplies this field for dropdowns. The sections below describe each form's settings.
-- `label` {type: string} {required} {callback} {html}\
-Label attached to the form.
-- `placeholder` {type: string} {optional} {callback}\
-Hint shown in an empty text form. Defaults to `""`.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls visibility and interaction. Defaults to `true`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the form’s wrapper.
-- `onChange` {type: void} {optional} {callback-only}\
-Runs as `onChange(context, value)` after a successful write, using the normalized submitted value. Direct backing-state changes and reads do not invoke it.
 
-#### Form values and bindings
 
-The following badges describe values used by `defaultValue`, binding getters and setters, and `onChange`:
 
-- Text values {type: string}
-- Slider values {type: number}
-- Dropdown values {type: string | number | boolean | null}
 
-Numeric values must be finite. Define storage through these fields:
 
-- `defaultValue` {type: FormValue} {required when: value is omitted}\
-Initial value for storage. Cannot be combined with `value`.
-- `value` {type: ValueBinding<FormValue>} {required when: defaultValue is omitted}\
-Reads and writes backing state. Cannot be combined with `defaultValue`.
-  - `get` {type: FormValue} {required} {callback-only}\
-  Runs as `get(context)` to read the current control value.
-  - `set` {type: void} {required} {callback-only}\
-  Runs as `set(context, value)` to update backing state. Initialization and loading do not call this setter.
+### 信息框infobox {type: Record<string, InfoboxDefinition>} {可选}
 
-`context.getInput(id)` reads the current value. `context.setInput(id, value)` checks interaction eligibility, normalizes the input, writes storage or calls the setter, and then invokes `onChange`. Bound controls do not create entries in `inputs`.
+显示可折叠的信息。点击标题会在 `context.layerState.infoboxes[id]` 中切换保存的折叠状态。
 
-#### Text Forms
+- `title` {type: string} {必要} {回调} {html}  
+折叠控件的标题。
+- `body` {type: string} {必要} {回调} {html}  
+盒子里的内容。
+- `collapsed` {type: boolean} {可选}  
+初始折叠状态。默认是 `false`。`startState.infoboxes` 可以覆盖它。
+- `unlocked` {type: boolean} {可选} {回调}  
+控制可见性和交互。默认是 `true`。
+- `style` {type: StyleValue} {可选} {回调}  
+设置外部盒子的样式。
+- `titleStyle` {type: StyleValue} {可选} {回调}  
+设置标题的样式。
+- `bodyStyle` {type: StyleValue} {可选} {回调}  
+设置内容部分的样式。
 
-Use `type: "text"` for text entry. `""` is a valid starting value. Text controls have no additional fields.
+当前的折叠状态在重置时会保留。
 
-#### Slider Forms
 
-Use `type: "slider"` for a range control:
 
-- `min` {type: number} {optional} {callback}\
-Lower bound. Must be finite and no greater than `max`. Defaults to `0`.
-- `max` {type: number} {optional} {callback}\
-Upper bound. Must be finite and no less than `min`. Defaults to `100`.
-- `step` {type: number} {optional} {callback}\
-Input step. Must be finite and nonnegative. Defaults to `1`.
 
-Slider presentation and writes clamp to the current bounds. Command writes do not round to `step`, only the browser uses it for input stepping.
 
-#### Dropdown Form
 
-Create a choice selector with `define.dropdown(options, configuration)`. Put the returned definition under its ID in `forms`. The helper supplies `type: "dropdown"` and `options`, don't include either field in `configuration`.
 
-- `options` {type: DropdownOption[]} {required} {callback}\
-First argument. Choices in presentation order. A callback runs as `options(context)` with a read-only item context.
-  - `label` {type: string} {required}\
-  Text displayed for the choice.
-  - `value` {type: FormValue} {required}\
-  Value stored when the choice is selected.
-- `configuration` {type: DropdownConfiguration} {required}\
-Second argument. Supplies the common form fields above, including `label` and either `defaultValue` or `value`.
 
-The choices determine the inferred value passed to `value.set` and `onChange`.
 
-The current value must match a choice using `===`. Changing the choices does not select a fallback automatically. Keep the current value valid when updating a dynamic choice list.
+
+
+### forms {type: Record<string, FormDefinition>} {可选}
+
+添加可编辑控件。`defaultValue` 会存储在 `context.layerState.inputs[id]` 中。`value` 将控件连接到你自己的后端状态。这两种配置不能同时使用。
+
+- `type` {type: "text" | "slider" | "dropdown"} {required}  
+选择表单类型。`define.dropdown` 为下拉菜单提供此字段。下面章节描述了每种表单的设置。
+- `label` {type: string} {required} {callback} {html}  
+附加在表单上的标签。
+- `placeholder` {type: string} {可选} {callback}  
+空文本表单中显示的提示。默认值为 `""`。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制可见性和交互。默认值为 `true`。
+- `style` {type: StyleValue} {可选} {callback}  
+设置表单包装器的样式。
+- `onChange` {type: void} {可选} {callback-only}  
+在成功写入后以 `onChange(context, value)` 形式运行，使用规范化的提交值。直接修改或读取后端状态不会触发它。
+
+
+
+
+
+
+
+
+
+
+
+
+#### 表单值和绑定
+
+以下标签描述了 `defaultValue`、绑定的 getter 和 setter 以及 `onChange` 使用的值：
+
+- 文本值 {type: string}
+- 滑块值 {type: number}
+- 下拉值 {type: string | number | boolean | null}
+
+数值必须是有限的。可以通过以下字段定义存储：
+
+- `defaultValue` {type: FormValue} {required when: value is omitted}  
+初始化存储的值。不能与 `value` 一起使用。
+- `value` {type: ValueBinding<FormValue>} {required when: defaultValue is omitted}  
+读取和写入后台状态。不能与 `defaultValue` 一起使用。
+- `get` {type: FormValue} {required} {callback-only}  
+通过 `get(context)` 读取当前控件的值。
+- `set` {type: void} {required} {callback-only}  
+通过 `set(context, value)` 更新后台状态。初始化和加载不会调用这个 setter。
+
+`context.getInput(id)` 读取当前值。`context.setInput(id, value)` 会检查交互资格、规范化输入、写入存储或调用 setter，然后触发 `onChange`。绑定控件不会在 `inputs` 中创建条目。
+
+#### 文本表单
+
+文本输入使用 `type: "text"`。`""` 是一个有效的初始值。文本控件没有其他附加字段。
+
+
+
+
+#### 滑块表单
+
+使用 `type: "slider"` 创建一个范围控制：
+
+- `min` {type: 数字} {可选} {回调}  
+  下限。必须是有限数且不大于 `max`。默认值为 `0`。
+- `max` {type: 数字} {可选} {回调}  
+  上限。必须是有限数且不小于 `min`。默认值为 `100`。
+- `step` {type: 数字} {可选} {回调}  
+  输入步长。必须是有限且非负的。默认值为 `1`。
+
+滑块展示会将写入值限制在当前边界内。命令写入不会四舍五入到 `step`，只有浏览器在输入步长时会使用它。
+
+
+
 
 ```js
 setup: define => define({
@@ -952,39 +1002,96 @@ setup: define => define({
 })
 ```
 
-## setup: miscellaneous
 
-The following properties control keyboard input and the simulation.
 
-### hotkeys {type: HotkeyDefinition[]} {optional}
 
-Binds keys to actions game-wide. Defaults to `[]`. Each entry has the following properties:
+#### 下拉表单
 
-- `key` {type: string} {required}\
-Key which triggers the action, using the syntax below.
-- `description` {type: string} {required} {callback}\
-Displayed alongside the hotkey in the Info panel.
-- `unlocked` {type: boolean} {optional} {callback}\
-Controls whether a hotkey is displayed and functional. Defaults to `true`.
-- `allowRepeat` {type: boolean} {optional}\
-Controls whether a hotkey can be held and continually trigger. Defaults to `false`.
-- `onPress` {type: void} {required} {callback-only}\
-Controls what happens when a hotkey is pressed.
+使用 `define.dropdown(options, configuration)` 创建一个选项选择器。将返回的定义放在 `forms` 下的对应 ID。这个辅助函数会提供 `type: "dropdown"` 和 `options`，不要在 `configuration` 中包含这两个字段。
 
-Hotkeys contain one main key and modifiers (`shift`, `ctrl`, `alt`, or `meta`) joined with `+`. Keys use the browser's `event.key`. Matching ignores case, whitespace, and modifier order. Use `space` and `plus` for those literal keys. `ctrl+s` is reserved for saving.
+- `options` {type: DropdownOption[]} {必要} {回调}  
+第一个参数。按显示顺序排列的选择项。回调以 `options(context)` 的方式运行，context 是只读的条目上下文。
+- `label` {type: string} {必要}  
+显示给用户的选项文本。
+- `value` {type: FormValue} {必要}  
+选择该选项时存储的值。
+- `configuration` {type: DropdownConfiguration} {必要}  
+第二个参数。提供上面通用的表单字段，包括 `label` 和 `defaultValue` 或 `value` 中的一个。
 
-### passiveGeneration, update, and automate
+这些选项决定传递给 `value.set` 和 `onChange` 的推断值。
 
-- `passiveGeneration` {type: DecimalSource} {optional} {callback}\
-Controls how much of a layer's primary currency you gain per second. Must be nonnegative. Actual granted currency is this rate multiplied by the internal `delta`.
-- `automate` {type: void} {optional} {callback-only}\
-Runs once per tick, intended for automatically performing certain layer actions. Behavior requiring awareness of delta-time should use `update`.
-- `update` {type: void} {optional} {callback-only}\
-Runs once per tick as `update(context, delta)`, with `delta` measured in seconds. Use it for per-tick operations that need elapsed time.
+当前值必须使用 `===` 匹配某个选项。更改选项不会自动选择备用值。在更新动态选项列表时，保持当前值有效。
 
-passiveGeneration, update, and automate all:
+```js
+setup: define => define({
+forms: {
+  nickname: {
+    type: "text",
+    label: "昵称",//译者注：好吧，我不知道这些中文字符会不会有什么影响
+    defaultValue: ""
+  },
+  volume: {
+    type: "slider",
+    label: "音量",
+    defaultValue: 50,
+    min: 0,
+    max: 100
+  },
+    notation: define.dropdown([
+    { label: "标准", value: "standard" },
+    { label: "科学", value: "scientific" }
+      ], {
+      label: "表示法",
+      defaultValue: "standard"
+    })
+  }
+})
+```
 
-- Run regardless of if a layer is unlocked, but stop if it is deactivated.
-- Run only once when an offline interval is calculated, passing the relevant (large) `delta` to update and multiplying passiveGeneration's rate by it.
 
-See [Simulation](01/10) for tick order, offline timing, and error behavior.
+## 设置：杂项
+
+以下属性控制键盘输入和模拟。
+
+
+
+
+### 快捷键 {type: HotkeyDefinition[]} {可选}
+
+将按键绑定到全局游戏操作。默认为 `[]`。每个条目具有以下属性：
+
+- `key` {type: string} {required}  
+触发操作的按键，使用以下语法。
+- `description` {type: string} {required} {callback}  
+在信息面板中与快捷键一起显示。
+- `unlocked` {type: boolean} {可选} {callback}  
+控制快捷键是否显示和可用。默认为 `true`。
+- `allowRepeat` {type: boolean} {可选}  
+控制快捷键是否可以按住持续触发。默认为 `false`。
+- `onPress` {type: void} {required} {callback-only}  
+控制按下快捷键时会发生什么。
+
+快捷键包含一个主键和修饰键(`shift`、`ctrl`、`alt` 或 `meta`)，用空格 ` ` 连接。按键使用浏览器的 `event.key`。匹配时忽略大小写、空格和修饰键顺序。使用 `space` 和 `plus` 表示这些字面按键。`ctrl s` 保留用于保存。
+
+
+
+
+
+
+
+
+### 被动生成、更新与自动化
+
+- `passiveGeneration` {type: DecimalSource} {可选} {回调}  
+控制你每秒能获得的该层主要货币数。必须为非负数。实际获得的货币是此速率乘以内部 `delta`。
+- `automate` {type: void} {可选} {仅回调}  
+每个刻度运行一次，用于自动执行某些层操作。需要考虑时间增量的行为应使用 `update`。
+- `update` {type: void} {可选} {仅回调}  
+每个刻度以 `update(context, delta)` 形式运行，`delta` 以秒为单位。用于需要按刻度操作并考虑经过时间的情况。
+
+被动生成、更新与自动化的共同点：
+
+- 无论层是否解锁都会运行，但如果层被停用则停止。
+- 离线时间计算时仅运行一次，将相关的大 `delta` 传递给 update，并将 passiveGeneration 的速率乘以它。
+
+有关刻度顺序、离线时间和错误行为，请参见 [模拟](01/10)。

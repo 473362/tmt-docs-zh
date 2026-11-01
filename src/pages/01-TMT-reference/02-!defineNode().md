@@ -1,104 +1,104 @@
 # defineNode()
 
-`defineNode` creates a tree node which isn't a layer. They can be used for navigation or running a function. Add the returned handle to the `nodes` property of [defineMod](01/00).
+`defineNode` 用来创建一个不是层的树节点。它们可以用于导航或运行函数。将返回的句柄添加到 [defineMod](01/00) 的 `nodes` 属性中。
 
-Nodes don't have their own saved state. Display callbacks receive a mod read context, and `onClick` receives a mod write context.
+节点没有自己的保存状态。显示回调接收 mod 读取上下文，`onClick` 接收 mod 写入上下文。
 
-Shared types used on this page:
+本页使用的共享类型：
 
-- `StyleValue` {type: Record<string, string | number | undefined>}\
-Maps CSS property names to their values. See [Styling](01/11) for supported values and overrides.
-- `ClassValue` {type: string | string[] | Record<string, boolean>}\
-Applies space-separated class names, a list of class names, or a map of names to whether they're applied. See [Styling](01/11) for examples.
-- `LayerHandle` {type: layer identity}\
-Returned by [defineLayer](01/01). Exposes only the layer's `id` and `points` resource, with context used to access its state.
-- `NodeHandle` {type: node identity}\
-Returned by `defineNode`. Exposes only the standalone tree node's `id`.
+- `StyleValue` {type: Record<string, string | number | undefined>}
+将 CSS 属性名映射到其对应的值。支持的值和覆盖请参见 [Styling](01/11)。
+- `ClassValue` {type: string | string[] | Record<string, boolean>}
+应用空格分隔的类名、类名列表，或根据布尔值应用或不应用类名的映射。示例请参见 [Styling](01/11)。
+- `LayerHandle` {type: layer identity}
+由 [defineLayer](01/01) 返回。仅暴露层的 `id` 和 `points` 资源，可通过上下文访问其状态。
+- `NodeHandle` {type: node identity}
+由 `defineNode` 返回。仅暴露独立树节点的 `id`。
 
-## Properties
+## 属性
 
-### Identity and Position
+### 身份和位置
 
-- `id` {type: string} {required}\
-Identifies the node. Must be unique across all layers and nodes in the mod.
-- `title` {type: string} {required} {callback}\
-Names the node.
-- `symbol` {type: string} {optional} {callback}\
-Determines what letter or symbol this node shows on its tree node.
-- `color` {type: string} {required}\
-A CSS color used throughout the node’s styling.
-- `row` {type: number | "left" | "right"} {required}\
-  Determines the node's displayed row . Must be finite. Also supports `"left"` and `"right"` (see the first property of [layer.setup.tree](01/01?s=3.4))
-- `position` {type: number} {optional}\
-The position of the node within its row. Must be finite. Defaults to its index in `defineMod`'s `nodes`.
+- `id` {type: string} {required}
+节点的唯一标识。在 mod 中所有层和节点中必须唯一。
+- `title` {type: string} {required} {callback}
+节点的名称。
+- `symbol` {type: string} {可选} {callback}
+确定该节点在树节点中显示的字母或符号。
+- `color` {type: string} {required}
+节点样式中使用的 CSS 颜色。
+- `row` {type: number | "left" | "right"} {required}
+节点显示的行。必须是有限值。也支持 "left" 和 "right"（参见 [layer.setup.tree](01/01?s=3.4) 的第一个属性）。
+- `position` {type: number} {可选}
+节点在其行中的位置。必须是有限值。默认值为 `defineMod` 的 `nodes` 中的索引。
 
-### Appearance
+### 外观
 
-- `shown` {type: boolean | "ghost"} {optional} {callback}\
-Controls whether the node appears. `"ghost"` takes up space without showing a node.
-- `image` {type: string} {optional} {callback}\
-A URL controlling the image displayed on the node’s tree button. Defaults to no image, instead displaying the node's symbol.
-- `tooltip` {type: string} {optional} {callback} {html}\
-Controls the node's tooltip. Defaults to `""`.
-- `mark` {type: boolean | string} {optional} {callback}\
-Shows a star when `true`, a custom image when given a URL, or nothing when `false`. Defaults to `false`.
-- `style` {type: StyleValue} {optional} {callback}\
-Styles the node. Defaults to nothing.
-- `class` {type: ClassValue} {optional} {callback}\
-Applies CSS classes to the node. Defaults to no additional classes.
+- `shown` {type: boolean | "ghost"} {可选} {callback}  
+控制节点是否显示。`"ghost"` 会占用空间但不显示节点。
+- `image` {type: string} {可选} {callback}  
+控制节点树按钮显示的s片 URL。默认不显示图片，而是显示节点的符号。
+- `tooltip` {type: string} {可选} {callback} {html}  
+控制节点的工具提示。默认值为 `""`。
+- `mark` {type: boolean | string} {可选} {callback}  
+当为 `true` 时显示星标，提供 URL 时显示自定义图片，`false` 则不显示。默认值为 `false`。
+- `style` {type: StyleValue} {可选} {callback}  
+设置节点样式。默认无样式。
+- `class` {type: ClassValue} {可选} {callback}  
+给节点应用 CSS 类。默认不添加额外类。
 
-### Connections
+### 连接
 
-- `connections` {type: TreeConnectionDefinition[]} {optional}\
-Draws branches to other layer or node handles. Defaults to `[]`. Customize a branch through these fields:
-  - `target` {type: LayerHandle | NodeHandle} {required}\
-  The layer or node to be connected.
-  - `color` {type: string} {optional}\
-  Connection color. Defaults to `"#ffffff"`.
-  - `width` {type: number} {optional}\
-  Connection width. Must be finite and positive. Defaults to `15`.
+- `connections` {type: TreeConnectionDefinition[]} {可选}  
+绘制到其他层或节点手柄的分支。默认值为 `[]`。可以通过以下字段自定义分支：
+- `target` {type: LayerHandle | NodeHandle} {required}  
+要连接的层或节点。
+- `color` {type: string} {可选}  
+连接颜色。默认值为 `"#ffffff"`。
+- `width` {type: number} {可选}  
+连接宽度。必须是有限且正数。默认值为 `15`。
 
-Connections only appear when both points are visible and nonghost. Unlike layers, nodes never add automatic connections to the preceding row.
+只有当两个点都可见且非幽灵状态时，连接才会显示。与层不同，节点不会自动与前一行添加连接。
 
-### Actions
+### 操作
 
-- `canClick` {type: boolean} {optional} {callback}\
-Controls whether the node can be interacted with. Defaults to `true`.
-- `onClick` {type: void} {optional} {callback-only}\
-Runs as `onClick(context)` when interacted with.
-- `layer` {type: LayerHandle} {optional}\
-Layer to navigate to after the click hook finishes. Defaults to no navigation target.
+- `canClick` {type: 布尔值} {可选} {回调}
+控制节点是否能被点击。默认是 `true`。
+- `onClick` {type: void} {可选} {仅回调}
+交互时会以 `onClick(context)` 运行。
+- `layer` {type: LayerHandle} {可选}
+点击完成后要跳转的层。默认没有导航目标。
 
-### Notifications
+### 通知
 
-- `shouldNotify` {type: boolean} {optional} {callback: boolean | undefined}\
-Controls action glow. Defaults to no glow.
-- `resetNotify` {type: boolean} {optional} {callback: boolean | undefined}\
-Controls reset glow. Defaults to no glow.
-- `actionGlowColor` {type: string} {optional} {callback}\
-Action glow color. Defaults to `"red"`.
-- `resetGlowColor` {type: string} {optional} {callback}\
-Reset glow color. Defaults to `"white"`.
+- `shouldNotify` {type: 布尔值} {可选} {回调: 布尔值 | 未定义}
+控制操作发光。默认不发光。
+- `resetNotify` {type: 布尔值} {可选} {回调: 布尔值 | 未定义}
+控制重置发光。默认不发光。
+- `actionGlowColor` {type: 字符串} {可选} {回调}
+操作发光颜色。默认是 `白色`。
+- `resetGlowColor` {type: 字符串} {可选} {回调}
+重置发光颜色。默认是 `红色`。
 
-Action glow takes priority.
+操作发光优先。
 
-## Example
+## 示例
 
-This node opens a message when clicked. Include `help` in the mod's `nodes` collection.
+这个节点在被点击时会弹出一条信息。在模组的 `nodes` 集合中包含 `help`。
 
 ```js
 const help = defineNode({
-    id: "help",
-    title: "Help",
-    symbol: "?",
-    color: "#ffffff",
-    row: "left",
-    tooltip: "How to Play",
-    onClick(context) {
-        context.alert({
-            title: "Getting Started",
-            message: "Gain points, then reset for prestige points."
-        });
-    }
+  id: "help",
+  title: "帮助",
+  symbol: "?",
+  color: "#ffffff",
+  row: "left",
+  tooltip: "怎么玩",
+  onClick(context) {
+    context.alert({
+      title: "快速上手",
+      message: "获取点数，然后重置以获得声望点数。"
+    });
+  }
 });
 ```

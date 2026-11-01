@@ -1,73 +1,41 @@
-# Troubleshooting
+# 排查问题
 
-Something isn't working? Start by finding the error as described below. Most problems become much easier to solve once you know which file or callback failed.
+遇到问题了？先按照下面的方法找出错误。一旦知道是哪个文件或回调出错，大多数问题都会变得容易解决。
 
-## Find the Error
+## 找出错误
 
-Open your browser's developer tools and select `Console`. Refresh the page, then repeat the action which causes the problem. Start with the first error, later messages may be consequences of it.
+打开浏览器的开发者工具并选择 `控制台`。刷新页面，然后重复会导致问题的操作。从第一个错误开始，后面的信息可能只是它引发的连锁反应。
 
-TMT errors often include a property path pointing to your definition or a callback. Look up that property in [the reference](01), then check the value your code supplies. If the message says TMT couldn't boot, expand the error's cause to find the underlying failure.
+TMT 错误通常会包含一个指向你的定义或回调的属性路径。在[参考文档](01)中查找该属性，然后检查代码提供的值。如果消息显示 TMT 无法启动，展开错误原因来找到根本原因。
 
-For files which won't load, use the `Network` tab and refresh again. Check the failed request's address, status, and response. An HTML error page returned for a JavaScript file is a path or hosting problem.
+对于无法加载的文件，使用 `网络` 标签然后再次刷新。查看失败请求的地址、状态和响应。JavaScript 文件返回 HTML 错误页面，说明路径或托管有问题。
 
-After fixing the code, reload the page.
+修改代码后，重新加载页面。
 
-## The Local Game Won't Open
+## 本地游戏无法打开
 
-Run the project through the runtime, as shown in [Creating a Game](00/00). Opening `index.html` directly gives you a `file://` address, which doesn't provide the web server the game needs.
+按照[创建游戏](00/00)中的方法，通过运行时启动项目。直接打开 `index.html` 会得到 `file://` 地址，这无法为游戏提供所需的 Web 服务器。
 
-If the launcher reports missing submodules, run this from the project folder:
+如果启动器提示缺少子模块，在项目文件夹中运行：
 
 ```sh
 git submodule update --init --recursive
 ```
 
-The runtime serves your game at `http://localhost:8080/`. If the browser didn't open automatically, go there yourself.
+运行时会在 `http://localhost:8080/` 提供你的游戏。如果浏览器没有自动打开，自己访问该地址。
 
-If the runtime reports that the address is already in use, stop another running copy of the runtime or the other program using port 8080, then try again. Closing a browser tab doesn't stop the runtime.
+如果运行时报告地址已被占用，停止另一个正在运行的运行时或占用 8080 端口的程序，然后再试一次。关闭浏览器标签页并不会停止运行时。
 
-## My Edits Don't Appear
+## 图层或功能没有显示
 
-Save the file in your editor and refresh the browser. The runtime doesn't refresh the page automatically.
+请分别检查以下内容：
 
-If that doesn't help, check that the running project is the one you're editing. On a published site, check that you committed and pushed the file and that the latest deployment succeeded.
+1. 注册：导入图层句柄并将其包含在 `defineMod.layers` 中。将节点包含在 `defineMod.nodes` 中。
+2. 树位置：检查图层的 `tree.row`、`tree.position` 和 `tree.shown`，或节点的 `row`、`position` 和 `shown`。mod 的 `ui.mode: "single"` 会隐藏主树。对于嵌入的树，检查其 `source`、`root`、`depth`、`include` 和 `exclude` 设置。
+3. 可用性：检查图层保存的 `unlocked` 状态以及相关的可见性和停用条件。绘制一个节点不会解锁其图层。
+4. 页面布局：自定义的 `ui.page` 会替换默认页面。为你想显示的每个功能集合包含一个部分。
 
-Changing `startState` doesn't replace values already present in a save. For example, changing the initial energy from `0` to `10` won't give an existing player ten energy. See [Loading and Migration](01/09?s=loading-and-migration).
-
-## A Definition Is Rejected
-
-Check that the field is in the right part of the definition. Layers put gameplay features inside `setup`, and item collections such as `upgrades` are keyed objects:
-
-```js
-setup: define => define({
-    upgrades: {
-        doubleGain: {
-            title: "Better Tools",
-            description: "Double main point gain.",
-            cost: 1
-        }
-    }
-})
-```
-
-Unknown configuration fields and explicit `undefined` values are rejected. Leave out a field you aren't using. For a callback, check every branch returns a value accepted by that field. A block-bodied arrow function needs `return`:
-
-```js
-pointGain: context => {
-    return context.stateOf(prestige).points.add(1);
-}
-```
-
-## A Layer or Feature Doesn't Appear
-
-Check these separately:
-
-1. Registration: import the layer handle and include it in `defineMod.layers`. Include nodes in `defineMod.nodes`.
-2. Tree placement: check the layer's `tree.row`, `tree.position`, and `tree.shown`, or the node's `row`, `position`, and `shown`. The mod's `ui.mode: "single"` hides the main tree. For an embedded tree, check its `source`, `root`, `depth`, `include`, and `exclude` settings.
-3. Availability: check the layer's saved `unlocked` state and the relevant visibility and deactivation conditions. Drawing a node doesn't unlock its layer.
-4. Page layout: a custom `ui.page` replaces the default page. Include a section for each feature collection you want displayed.
-
-For example, defining clickables doesn't make them appear in a custom page unless that page includes them:
+例如，定义可点击项并不会让它们出现在自定义页面上，除非该页面包含它们：
 
 ```js
 ui: {
@@ -78,15 +46,15 @@ ui: {
 }
 ```
 
-Use the same item IDs throughout your code. An item keyed as `doubleGain` is addressed as `"doubleGain"`. Numeric-looking IDs such as `"11"` are still strings when passed to context methods.
+在整个代码中使用相同的条目 ID。一个键为 `doubleGain` 的条目在访问时要用 `"doubleGain"`。看起来像数字的 ID，如 `"11"`，在传递给上下文方法时仍然是字符串。
 
-See [defineMod](01/00) for registration and tree/single-page mode, [defineLayer](01/01) for availability, tree settings, and page sections, and [defineNode](01/02) for nodes.
+有关注册和树/单页模式，请参见 [defineMod](01/00)；有关可用性、树设置和页面部分，请参见 [defineLayer](01/01)；有关节点，请参见 [defineNode](01/02)。
 
-## An Upgrade Doesn't Change Production
+## 升级不会改变产量
 
-An upgrade's description only displays text. An `effect` calculates a value, but the engine doesn't automatically apply that value to point gain or another formula.
+升级的描述只显示文本。`effect` 会计算一个数值，但引擎不会自动将该数值应用到点数获取或其他公式中。
 
-For a simple doubling upgrade, your mod's point gain might be:
+对于一个简单的倍增升级，你的 mod 的点数获取可能如下：
 
 ```js
 pointGain(context) {
@@ -98,65 +66,65 @@ pointGain(context) {
 }
 ```
 
-This uses an imported `prestige` handle with an upgrade named `doubleGain`. If you declared an `effect` instead, read it with `context.getUpgradeEffect("doubleGain", prestige)` and apply it in the formula. That getter can return `undefined` while the upgrade isn't owned or its layer is deactivated, so handle the absent effect.
+这里使用了一个导入的 `prestige` 句柄和一个名为 `doubleGain` 的升级。如果你声明了一个 `effect`，可以用 `context.getUpgradeEffect("doubleGain", prestige)` 读取并在公式中应用。这个获取器在升级未拥有或其层次被停用时会返回 `undefined`，所以需要处理缺失的 effect。
 
-See [Context](01/06) for ownership checks and effect getters.
+参考 [Context](01/06) 了解所有权检查和 effect 获取方法。
 
-## A Callback Reports Read-Only or Expired State
+## 回调报告只读或已过期的状态
 
-Calculations such as `pointGain`, `cost`, and display callbacks read state. Change state in write hooks such as `update` or `onClick`, using the context passed to that hook.
+像 `pointGain`、`cost` 这样的计算，以及显示回调会读取状态。在写操作的钩子中修改状态，比如 `update` 或 `onClick`，使用传递给该钩子的上下文。
 
-Contexts and their state views only last for the current synchronous callback. Don't store them in a variable, reuse them inside `setTimeout`, or access them after `await`. Author callbacks can't be `async` either. For a delayed confirmation, use the engine's [modal callbacks](01/08) and the fresh context they receive.
+上下文及其状态视图仅在当前同步回调中有效。不要把它们存到变量里，也不要在 `setTimeout` 中重用，或者在 `await` 之后访问它们。作者回调也不能是 `async`。如果需要延迟确认，可以使用引擎的 [模态回调](01/08) 以及它们收到的新上下文。
 
-A reset may replace a layer's state. After an action which can reset that layer, get its state again through `context.stateOf(handle)` before writing to it.
+重置可能会替换一个图层的状态。在可能重置该图层的操作之后，再通过 `context.stateOf(handle)` 获取其状态，然后再进行写操作。
 
-Fix the callback and reload after an error.
+修复回调并在出错后重新加载。
 
-## Production Is Wrong or Stops
+## 产量错误或停止
 
-Decimal calculations return a result. Assign it back when changing a balance:
+十进制计算会返回结果。改变余额时要把结果重新赋值回去：
 
 ```js
 update(context, delta) {
-    const state = context.layerState;
-    state.energy = state.energy.add(delta);
+const state = context.layerState;
+state.energy = state.energy.add(delta);
 }
 ```
 
-Calling `state.energy.add(delta)` without assigning the result leaves the balance unchanged. Use Decimal methods such as `.add`, `.mul`, and `.gte` instead of ordinary arithmetic and comparison operators.
+如果调用 `state.energy.add(delta)` 但不把结果赋值回去，余额不会改变。要使用 Decimal 的方法，比如 `.add`、`.mul` 和 `.gte`，而不是普通的算术或比较运算符。
 
-`delta` is elapsed time in seconds. The example grants one energy per second. Adding a fixed amount per callback makes the rate depend on update frequency. The engine already multiplies `pointGain` and `passiveGeneration` by elapsed time, so those fields should return rates per second.
+`delta` 是经过的秒数。这个例子里每秒获得一点能量。如果每次回调都加固定数值，增速就会依赖于更新频率。引擎已经会把 `pointGain` 和 `passiveGeneration` 乘以经过的时间，所以这些字段应该返回每秒的速率。
 
-If production has stopped, check the first console error, `canGeneratePoints` for points, and `deactivated` for layer production. Reaching endgame pauses simulation until the player chooses to keep going. Merely locking a layer doesn't stop its update callback.
+如果产量停止了，先检查第一个控制台报错，查看 `canGeneratePoints` 来确认点数能否生成，以及 `deactivated` 来检查层产量。达到游戏终点会暂停模拟，直到玩家选择继续。仅仅锁定一层不会停止它的更新回调。
 
-Offline progress runs one update with the offline time. Automation which buys one item runs once, not once per missed live tick. Check the player's offline progress option and `info.offlineLimitHours` too. See [Simulation](01/10) for update order and offline behavior.
+离线进程会用离线时间跑一次更新。自动化购买一个物品也是只执行一次，而不是每个错过的实时刻都执行一次。也要检查玩家的离线进度选项和 `info.offlineLimitHours`。详细更新顺序和离线行为可以参考 [Simulation](01/10) 。
 
-## My Save Disappeared
+## 我的存档消失了
 
-Check the address before resetting anything. Saves belong to a browser profile, a domain, and the game's `info.id`.
+在重置任何东西之前先检查地址。存档属于一个浏览器配置文件、一个域名以及游戏的 `info.id`。
 
-The runtime uses `http://localhost:8080/`, so restarting it doesn't change the save location. Using `127.0.0.1` instead of `localhost`, moving online, or changing domains sets a different storage location. Changing `info.id` selects a different save within that location.
+运行时使用 `http://localhost:8080/`，所以重启它不会改变存档位置。使用 `127.0.0.1` 替代 `localhost`、上线或更换域名都会设置不同的存储位置。更改 `info.id` 会在该位置选择不同的存档。
 
-If the old address is still available, open the game there and export its save, then import it at the new address. Keep exported backups before changing where you play. Browser saves aren't automatically shared between computers or browser profiles.
+如果旧地址仍然可用，在那里打开游戏并导出存档，然后在新地址导入。更换游玩位置前请保留导出的备份。浏览器存档不会自动在不同电脑或浏览器配置文件之间共享。
 
-## The Game Can't Load or Save
+## 游戏无法加载或保存
 
-:::warning Keep the Original Save
-Export the stored data offered by recovery before trying a reset. Clearing browser storage or using Hard Reset can remove the save you're trying to recover.
+:::warning 保留原始存档
+在尝试重置之前，先导出恢复提供的存储数据。清除浏览器存储或使用硬重置可能会删除你试图恢复的存档。
 :::
 
-A corrupt or incompatible automatic save opens recovery and blocks ordinary saving so the original text isn't overwritten. The fresh state shown during recovery doesn't mean the old data was deleted. Fix a migration or compatibility problem, then reload. Alternatively, import a known working save through recovery. See [Saves and Errors](01/09).
+损坏或不兼容的自动存档会打开恢复功能，并阻止普通保存，这样原始文本就不会被覆盖。恢复时显示的新状态并不意味着旧数据被删除。先修复迁移或兼容性问题，然后重新加载。或者，通过恢复导入已知可用的存档。参见 [存档和错误](01/09)。
 
-A gameplay fatal error is different. Fix the failing code and reload before trying to import or reset.
+游戏中的致命错误情况不同。修复出错的代码并重新加载，然后再尝试导入或重置。
 
-If the console says `Uint8Array.fromBase64` or `toBase64` is unavailable, update your browser. The engine uses those browser APIs.
+如果控制台提示 `Uint8Array.fromBase64` 或 `toBase64` 不可用，请更新你的浏览器。引擎使用这些浏览器 API。
 
-When a code change breaks an older save, use `saveVersion` and `migrateSave` to convert its data. Changing `info.version` only changes the displayed version. See [defineMod](01/00) for an example.
+当代码更改破坏了旧存档时，使用 `saveVersion` 和 `migrateSave` 来转换其数据。仅更改 `info.version` 只会改变显示的版本。参见 [defineMod](01/00) 获取示例。
 
-## Asking for Help
+## 寻求帮助
 
-If you're still stuck, note the first error and its property path, what you did to trigger it, and the smallest relevant piece of code. Note your browser and engine version, whether the problem happens locally or online, and whether it also happens with a fresh save.
+如果你还是卡住了，记下第一个错误及其属性路径，你触发错误的操作，以及最小相关的代码段。记录你的浏览器和引擎版本，问题是在本地还是在线出现，以及在新存档下是否也会出现。
 
-For a problem tied to an existing save, keep an exported copy which reproduces it. A small example and clear steps are much easier to investigate than a screenshot of the final error alone.
+对于与现有存档相关的问题，保留一份能够重现问题的导出副本。一个小的示例和清晰的操作步骤比仅仅截取最终错误截图更容易进行调查。
 
-Once you've gathered all this information, people in the [TMT Discord Server](https://discord.gg/F3xveHV) will be happy to help you.
+一旦你收集了所有这些信息，[TMT Discord 服务器](https://discord.gg/F3xveHV)上的人们会很乐意帮助你。

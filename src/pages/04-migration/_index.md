@@ -1,7 +1,7 @@
-# Migration
+# 迁移
 
-Moving an existing game to a new engine version? Start with the guide for your current version:
+将现有游戏迁移到新的引擎版本？从你当前版本的指南开始：
 
-- [2.x to 3.x](04/00) covers moving a 2.x mod into the current template, replacing old APIs, and handling existing saves.
+- [2.x 到 3.x](04/00) 涵盖了将 2.x 模组迁移到当前模板、更换旧的 API，以及处理已有存档。
 
-If you're starting a new game, use [Getting Started](00) instead.
+如果你要开始一个新游戏，请改用 [入门指南](00) 。

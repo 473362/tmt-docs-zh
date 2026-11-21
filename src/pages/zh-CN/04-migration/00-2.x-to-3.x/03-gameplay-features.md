@@ -97,21 +97,23 @@ clickables: {
 
 ```js
 challenges: {
-"11": {
-title: "扩张",
-description: "主要点数收益是根源化的",
-goal: 100,
-goalResource: points,
-goalDescription: "达到 100 点",
-rewardDescription: "点数收益翻倍！",
-effect: () => 2
-}
+  "11": {
+    title: "扩张",
+    description: "主要点数收益是根源化的",
+    goal: 100,
+    goalResource: points,
+    goalDescription: "达到 100 点",
+    rewardDescription: "点数收益翻倍！",
+    effect: () => 2
+  }
 }
 ```
 
 在模组的 `pointGain` 中，使用 `context.inChallenge("11", prestige)` 计算惩罚，使用 `context.getChallengeEffect("11", prestige) ?? 1` 计算奖励倍数。
 
+/*
 进入和退出挑战会重置其源层，同时保留完成历史。检查任何旧的 `doReset` 特殊情况，并将需要保留的部分转移到 retention。`countsAs` 直接匹配列出的挑战，不会递归触发。
+*/
 
 ## 里程碑和成就
 

@@ -1,0 +1,37 @@
+{
+    "badges": {
+        "required": {
+            "label": "必填",
+            "title": "此字段必须被定义"
+        },
+        "optional": {
+            "label": "可选",
+            "title": "此字段可以省略"
+        },
+        "callback": {
+            "label": "允许回调",
+            "title": "接受显示类型的值或返回该类型的回调"
+        },
+        "callback-only": {
+            "label": "仅回调",
+            "title": "必须是返回显示类型的回调"
+        },
+        "html": {
+            "label": "接受 HTML",
+            "title": "字符串值或回调结果中可接受任意 HTML"
+        },
+        "required when": {
+            "label": "当 ${value} 时必填",
+            "title": "仅在 ${value} 时必填"
+        }
+    },
+    "getTitleFromPath": {
+        "": ""
+    },
+    "OnThisPage": "在本页",
+    "TMTDocs": "TMT 文档",
+    "TMTWiki": "TMT Wiki",
+    "404": "我们怎么会到这里？",
+    "TheModdingTree": "模组树",
+    "siteCredit": "由 flamemasternxf 用 ♡︎ 撰写"
+}

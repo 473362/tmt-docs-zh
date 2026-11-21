@@ -42,6 +42,8 @@ TMT 的 SDK 提供了用于编写游戏所需的函数、句柄和声明。JavaS
 树的可见性行为。
 - `TreeRow` {type: number | "left" | "right"}  
 可视化树的位置。
+- `BooleanStateKey<State>` {type: 布尔字段名称}
+图层状态下的顶层布尔键，通过里程碑和布局切换`value`简写表示接受。
 - `ValueBinding<Value, ReadContext, WriteContext>` {type: 对象}  
 通过以下回调将输入连接到备份状态：
 - `get` {type: Value} {必需} {仅回调}  
@@ -56,11 +58,13 @@ TMT 的 SDK 提供了用于编写游戏所需的函数、句柄和声明。JavaS
 | 导出的类型 | 参考 |
 | --- | --- |
 | `Decimal`, `DecimalSource`, `ReadonlyDecimal` | [Decimal](01/04) |
+| `ConsoleApi`, `ConsoleSnapshot` | [Read and Edit State from the Console](03?s=read-and-edit-state-from-the-console) |
 | `PlayerState` | [主玩家上下文](01/06?s=main-player-context) |
 | `LayerCoreState`, `LayerInitialState`, `LayerState` | [defineLayer 的 startState](01/01?s=2) |
 | `StyleValue`, `ClassValue` | [样式](01/11) |
-| `Computable`, `DeepReadonly`, `LayerHandle`, `AnyLayerHandle`, `NodeHandle`, `TreeNodeHandle`, `DecimalResource`, `Shown`, `TreeRow`, `ValueBinding` | 上述共享类型 |
+| `Computable`, `DeepReadonly`, `LayerHandle`, `AnyLayerHandle`, `NodeHandle`, `TreeNodeHandle`, `DecimalResource`, `Shown`, `TreeRow`, `BooleanStateKey`,`ValueBinding` | 上述共享类型 |
 | `ModDefinition`, `ModInfo`, `ModUiDefinition`, `SimulationDefinition` | [defineMod](01/00) |
+| `ShellLayoutNode`, `ShellTab` | [Custom Shell Layout](01/00?s=custom-shell-layout) |
 | `ResourceDefinition` | [defineResource](01/03) |
 | `NodeDefinition` | [defineNode](01/02) |
 | `TreeNodeOptions<Context>`, `TreeConnection`, `TreeConnectionDefinition`, `HotkeyDefinition<State>`, `LayerUiDefinition<State>` | [defineLayer](01/01) |

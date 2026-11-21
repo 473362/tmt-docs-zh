@@ -1,0 +1,37 @@
+{
+    "badges": {
+        "required": {
+            "label": "Required",
+            "title": "This field must be defined"
+        },
+        "optional": {
+            "label": "Optional",
+            "title": "This field may be omitted"
+        },
+        "callback": {
+            "label": "Callback allowed",
+            "title": "Accepts a value of the shown type or a callback returning that type"
+        },
+        "callback-only": {
+            "label": "Callback only",
+            "title": "Must be a callback returning the shown type"
+        },
+        "html": {
+            "label": "Accepts HTML",
+            "title": "Accepts arbitrary HTML in the string value or callback result"
+        },
+        "required when":{
+            "label": "Required when ${value}",
+            "title": "Required only when ${value}"
+        }
+    },
+    "getTitleFromPath":{
+        "":""
+    },
+    "OnThisPage":"On This Page",
+    "TMTDocs":"TMT Docs",
+    "TMTWiki":"TMT Wiki",
+    "404":"How did we get here?",
+    "TheModdingTree":"The Modding Tree",
+    "siteCredit":"Written with ♡︎ by flamemasternxf"
+}
